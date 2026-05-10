@@ -1210,10 +1210,10 @@
 
       btn.disabled = true;
       statusEl.classList.add('visible');
-      statusTxt.textContent = 'Queued…';
+      spinner.className = 'gen-spinner';
+      statusTxt.textContent = 'Generating video… this takes 1–3 minutes';
       viewLib.classList.remove('visible');
 
-      let jobId;
       try {
         const res = await fetch(`${API_BASE}/api/generate-video`, {
           method: 'POST',
@@ -1221,43 +1221,34 @@
           body: JSON.stringify({ script: lastScript, persona: lastPersona })
         });
         if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || `HTTP ${res.status}`);
-        jobId = (await res.json()).jobId;
+        const result = await res.json();
+
+        // Save to localStorage so the library can display it across any deployment
+        try {
+          const saved = JSON.parse(localStorage.getItem('forge_videos') || '[]');
+          saved.unshift({
+            id: `local-${Date.now()}`,
+            videoUrl: result.videoUrl,
+            hook: lastScript.hook,
+            caption: lastScript.hook + '\n\n' + lastScript.cta,
+            fullScript: lastScript.full_script,
+            contentPillar: lastScript.content_pillar || '',
+            runtimeSeconds: lastScript.estimated_runtime_seconds || 0,
+            date: result.date || new Date().toISOString(),
+            timestamp: Date.now(),
+            source: 'generated'
+          });
+          localStorage.setItem('forge_videos', JSON.stringify(saved.slice(0, 50)));
+        } catch { /* localStorage unavailable */ }
+
+        spinner.className = 'gen-spinner done';
+        statusTxt.innerHTML = '<strong>Video ready!</strong> It\'s in your Library.';
+        viewLib.classList.add('visible');
       } catch (err) {
         spinner.className = 'gen-spinner failed';
-        statusTxt.innerHTML = `<strong>Failed to start job:</strong> ${err.message}`;
+        statusTxt.innerHTML = `<strong>Generation failed:</strong> ${err.message}`;
         btn.disabled = false;
-        return;
       }
-
-      statusTxt.textContent = 'Generating video… redirecting to Library in 3 minutes';
-
-      const timeout = setTimeout(() => {
-        clearInterval(poll);
-        window.location.href = (window.location.port === '3002' ? '' : 'http://localhost:3002') + '/library';
-      }, 3 * 60 * 1000);
-
-      const poll = setInterval(async () => {
-        try {
-          const r = await fetch(`${API_BASE}/api/job/${jobId}`);
-          const job = await r.json();
-
-          if (job.status === 'done') {
-            clearInterval(poll);
-            clearTimeout(timeout);
-            spinner.className = 'gen-spinner done';
-            statusTxt.innerHTML = '<strong>Video ready!</strong> It\'s in your Library.';
-            viewLib.classList.add('visible');
-          } else if (job.status === 'failed') {
-            clearInterval(poll);
-            clearTimeout(timeout);
-            spinner.className = 'gen-spinner failed';
-            statusTxt.innerHTML = `<strong>Generation failed:</strong> ${job.error ?? 'unknown error'}`;
-            btn.disabled = false;
-          }
-        } catch {
-          // network blip — keep polling
-        }
-      }, 5000);
     });
   </script>
 

@@ -1,5 +1,8 @@
 {
   "version": 2,
+  "functions": {
+    "src/server/server.ts": { "maxDuration": 300 }
+  },
   "builds": [
     { "src": "public/**", "use": "@vercel/static" },
     { "src": "src/server/server.ts", "use": "@vercel/node" }

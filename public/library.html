@@ -2048,20 +2048,37 @@
       grid.innerHTML = html;
     }
 
-    // Load videos
+    // Load videos — merge server filesystem videos with localStorage-saved ones
     (async () => {
+      const API_BASE = (window.location.hostname === 'localhost' && window.location.port !== '3002') ? 'http://localhost:3002' : '';
+
+      let serverVideos = [];
       try {
-        const API_BASE = (window.location.hostname === 'localhost' && window.location.port !== '3002') ? 'http://localhost:3002' : '';
         const res = await fetch(`${API_BASE}/api/videos`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        allVideos = await res.json();
+        if (res.ok) serverVideos = await res.json();
+      } catch { /* server unreachable — localStorage will still work */ }
+
+      let localVideos = [];
+      try {
+        localVideos = JSON.parse(localStorage.getItem('forge_videos') || '[]');
+      } catch { /* localStorage unavailable */ }
+
+      // Merge, deduplicate by videoUrl
+      const seen = new Set();
+      allVideos = [...localVideos, ...serverVideos].filter(v => {
+        if (!v.videoUrl || seen.has(v.videoUrl)) return false;
+        seen.add(v.videoUrl);
+        return true;
+      });
+
+      if (allVideos.length > 0) {
         renderGrid(allVideos);
-      } catch (err) {
+      } else {
         grid.innerHTML = `
           <div class="empty">
-            <div class="empty-icon">⚠️</div>
-            <h2>Could not load videos</h2>
-            <p>Make sure the server is running: <code>npm run serve</code></p>
+            <div class="empty-icon">🎬</div>
+            <h2>No videos yet</h2>
+            <p>Generate your first reel on the <a href="/create" style="color:var(--accent)">Create</a> page.</p>
           </div>`;
         document.getElementById('video-count').textContent = '';
       }

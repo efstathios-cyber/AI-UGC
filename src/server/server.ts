@@ -2,7 +2,7 @@ import { createServer } from "node:http";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { readFileSync, existsSync, statSync, createReadStream } from "node:fs";
 import { promises as fsp } from "node:fs";
-import { join, dirname, extname } from "node:path";
+import { join, dirname, extname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadLocalEnv } from "../config/env.js";
 import { runtimeWindow } from "../config/runtime.js";
@@ -40,12 +40,6 @@ const __dirname = dirname(__filename);
 const ROOT = join(__dirname, "../../");
 const PUBLIC = join(ROOT, "public");
 const STORAGE_ROOT = process.env.VERCEL ? "/tmp" : ROOT;
-
-// ── Async video generation jobs ──────────────────────────────────────────────
-
-type JobStatus = "queued" | "generating" | "done" | "failed";
-interface Job { status: JobStatus; error?: string; }
-const jobs = new Map<string, Job>();
 
 function makeSeedDanceClient() {
   const apiKey = process.env.SEED_DANCE_API_KEY;
@@ -446,39 +440,26 @@ async function handler(req: IncomingMessage, res: ServerResponse): Promise<void>
     }
   }
 
-  if (req.method === "GET" && pathname.startsWith("/api/job/")) {
-    const jobId = pathname.slice("/api/job/".length);
-    const job = jobs.get(jobId);
-    if (!job) { json(res, 404, { error: "Job not found" }); return; }
-    json(res, 200, job);
-    return;
-  }
-
   if (req.method === "POST" && pathname === "/api/generate-video") {
     try {
       const body = await readBody(req);
       const { script, persona } = JSON.parse(body) as { script: ScriptJson; persona: PersonaInput };
       if (!script?.full_script) { json(res, 400, { error: "script is required" }); return; }
 
-      const jobId = `job-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-      jobs.set(jobId, { status: "queued" });
-      json(res, 202, { jobId });
-
-      (async () => {
-        try {
-          jobs.set(jobId, { status: "generating" });
-          const sdPrompt = buildSeedDancePrompt(persona, script);
-          const client = makeSeedDanceClient();
-          const media = await client.createSpokenVideo(sdPrompt);
-          const publisher = new ManualHandoffPublisher(join(STORAGE_ROOT, "storage", "handoffs"));
-          await publisher.createPackage(script, media);
-          jobs.set(jobId, { status: "done" });
-        } catch (err) {
-          console.error("Video generation failed:", err);
-          jobs.set(jobId, { status: "failed", error: String(err) });
-        }
-      })();
+      const sdPrompt = buildSeedDancePrompt(persona, script);
+      const client = makeSeedDanceClient();
+      const media = await client.createSpokenVideo(sdPrompt);
+      const publisher = new ManualHandoffPublisher(join(STORAGE_ROOT, "storage", "handoffs"));
+      const pkg = await publisher.createPackage(script, media);
+      const videoUrl = media.sourceUrl ?? `/storage/handoffs/${basename(pkg.packageDir)}/reel.mp4`;
+      json(res, 200, {
+        status: "done",
+        videoUrl,
+        date: new Date().toISOString(),
+        hook: script.hook
+      });
     } catch (err) {
+      console.error("Video generation failed:", err);
       json(res, 500, { error: String(err) });
     }
     return;
