@@ -5,6 +5,8 @@
   "routes": [
     { "src": "/api/(.*)", "dest": "/dist/server/server.js" },
     { "src": "/storage/(.*)", "dest": "/dist/server/server.js" },
+    { "src": "/create", "dest": "/create.html" },
+    { "src": "/library", "dest": "/library.html" },
     { "handle": "filesystem" }
   ]
 }
