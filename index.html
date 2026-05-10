@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Forge — AI UGC at Scale</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #08080a;
+      --bg2: #101014;
+      --bg3: #16161c;
+      --border: #222228;
+      --text: #f5f5f7;
+      --muted: #8e8e9a;
+      --accent: #7c6cfc;
+      --accent-dim: #4a3fb5;
+      --accent-glow: rgba(124,108,252,.18);
+      --green: #22c55e;
+      --radius: 12px;
+      --font: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 48px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(8,8,10,.88);
+      backdrop-filter: blur(14px);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 1.1rem;
+      letter-spacing: -.02em;
+    }
+
+    .logo-mark {
+      width: 28px; height: 28px;
+      border-radius: 7px;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .85rem;
+      font-weight: 900;
+      color: #fff;
+      box-shadow: 0 0 16px var(--accent-glow);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+      font-size: .88rem;
+      color: var(--muted);
+    }
+
+    .nav-links a:hover { color: var(--text); }
+
+    .nav-cta {
+      padding: 9px 22px;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 8px;
+      font-size: .875rem;
+      font-weight: 600;
+      box-shadow: 0 0 20px var(--accent-glow);
+      transition: opacity .15s, transform .1s;
+    }
+
+    .nav-cta:hover { opacity: .88; transform: translateY(-1px); }
+
+    /* ── Hero ── */
+    .hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 110px 40px 80px;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 15px;
+      border: 1px solid rgba(124,108,252,.35);
+      border-radius: 100px;
+      font-size: .75rem;
+      color: #a89cff;
+      margin-bottom: 32px;
+      background: rgba(124,108,252,.07);
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .badge-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 6px var(--accent);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .25; }
+    }
+
+    h1 {
+      font-size: clamp(2.6rem, 6.5vw, 4.4rem);
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -.04em;
+      margin-bottom: 24px;
+    }
+
+    h1 .grad {
+      background: linear-gradient(135deg, #a89cff 0%, #7c6cfc 40%, #5b8def 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      font-size: 1.15rem;
+      color: var(--muted);
+      max-width: 580px;
+      margin-bottom: 42px;
+      line-height: 1.75;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn-primary {
+      padding: 14px 30px;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      box-shadow: 0 0 28px var(--accent-glow);
+      transition: opacity .15s, transform .1s;
+    }
+
+    .btn-primary:hover { opacity: .88; transform: translateY(-2px); }
+
+    .btn-secondary {
+      padding: 14px 30px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 500;
+      transition: border-color .15s, color .15s;
+    }
+
+    .btn-secondary:hover { border-color: var(--muted); color: var(--text); }
+
+    /* ── Persona reel showcase ── */
+    .showcase-wrap {
+      padding: 0 0 80px;
+      overflow: hidden;
+    }
+
+    .showcase-label {
+      text-align: center;
+      font-size: .72rem;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+
+    .reel-row {
+      display: flex;
+      justify-content: center;
+      gap: 18px;
+    }
+
+    .reel-card {
+      flex-shrink: 0;
+      width: 160px;
+      aspect-ratio: 9/16;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform .35s cubic-bezier(.22,1,.36,1), border-color .2s, box-shadow .2s;
+    }
+
+    .reel-card:nth-child(1) { transform: rotate(-5deg) translateY(24px); }
+    .reel-card:nth-child(2) { transform: rotate(-2deg) translateY(10px); }
+    .reel-card:nth-child(3) { transform: rotate(0deg); z-index: 3; }
+    .reel-card:nth-child(4) { transform: rotate(2deg) translateY(10px); }
+    .reel-card:nth-child(5) { transform: rotate(5deg) translateY(24px); }
+
+    .reel-card:hover {
+      transform: rotate(0deg) translateY(-10px) scale(1.04);
+      z-index: 10;
+      border-color: var(--accent);
+      box-shadow: 0 12px 40px rgba(124,108,252,.25);
+    }
+
+    .reel-bg {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0; left: 0;
+    }
+
+    .reel-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, transparent 30%, rgba(0,0,0,.88) 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 14px 12px;
+    }
+
+    .reel-niche {
+      font-size: .55rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .09em;
+      color: rgba(255,255,255,.5);
+      margin-bottom: 4px;
+    }
+
+    .reel-hook {
+      font-size: .68rem;
+      font-weight: 600;
+      line-height: 1.35;
+      color: #fff;
+    }
+
+    .reel-views {
+      font-size: .6rem;
+      color: rgba(255,255,255,.4);
+      margin-top: 6px;
+      font-family: monospace;
+    }
+
+    /* card colors */
+    .rc1 { background: linear-gradient(160deg, #1a0a2e 0%, #0d0520 100%); }
+    .rc2 { background: linear-gradient(160deg, #0a1a10 0%, #051008 100%); }
+    .rc3 { background: linear-gradient(160deg, #1a100a 0%, #100608 100%); }
+    .rc4 { background: linear-gradient(160deg, #0a101a 0%, #050810 100%); }
+    .rc5 { background: linear-gradient(160deg, #1a1a0a 0%, #100f05 100%); }
+
+    .reel-avatar {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,.3);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .7rem;
+      font-weight: 800;
+    }
+
+    .av1 { background: linear-gradient(135deg, #9b59b6, #6c3483); color: #fff; }
+    .av2 { background: linear-gradient(135deg, #27ae60, #145a32); color: #fff; }
+    .av3 { background: linear-gradient(135deg, #e67e22, #a04000); color: #fff; }
+    .av4 { background: linear-gradient(135deg, #2980b9, #1a4a6b); color: #fff; }
+    .av5 { background: linear-gradient(135deg, #c0392b, #7b241c); color: #fff; }
+
+    /* ── Stats ── */
+    .stats {
+      display: flex;
+      justify-content: center;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      margin: 0 48px;
+    }
+
+    .stat {
+      flex: 1;
+      max-width: 220px;
+      text-align: center;
+      padding: 44px 24px;
+      border-right: 1px solid var(--border);
+    }
+
+    .stat:last-child { border-right: none; }
+
+    .stat-number {
+      font-size: 2.6rem;
+      font-weight: 900;
+      letter-spacing: -.05em;
+      color: var(--accent);
+      display: block;
+    }
+
+    .stat-label {
+      font-size: .82rem;
+      color: var(--muted);
+      margin-top: 5px;
+      line-height: 1.4;
+    }
+
+    /* ── Section shell ── */
+    section {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 100px 48px;
+    }
+
+    .section-label {
+      font-size: .72rem;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    h2 {
+      font-size: clamp(1.9rem, 4vw, 3rem);
+      font-weight: 900;
+      letter-spacing: -.04em;
+      line-height: 1.1;
+      margin-bottom: 18px;
+    }
+
+    .section-sub {
+      font-size: 1.05rem;
+      color: var(--muted);
+      max-width: 520px;
+      line-height: 1.75;
+      margin-bottom: 64px;
+    }
+
+    /* ── Problem ── */
+    .problem-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .problem-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 30px;
+    }
+
+    .problem-icon { font-size: 1.5rem; margin-bottom: 14px; }
+
+    .problem-card h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 9px;
+    }
+
+    .problem-card p {
+      font-size: .875rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    /* ── Steps ── */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      background: var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .step {
+      background: var(--bg2);
+      padding: 44px 32px;
+    }
+
+    .step-number {
+      font-size: .7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--accent-dim);
+      margin-bottom: 22px;
+    }
+
+    .step-icon { font-size: 2rem; margin-bottom: 18px; display: block; }
+
+    .step h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .step p {
+      font-size: .875rem;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    /* ── Features ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .feature {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    .feature:hover {
+      border-color: var(--accent-dim);
+      box-shadow: 0 0 24px rgba(124,108,252,.08);
+    }
+
+    .feature-icon {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      background: var(--accent-glow);
+      border: 1px solid rgba(124,108,252,.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      margin-bottom: 18px;
+    }
+
+    .feature h3 {
+      font-size: .95rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .feature p {
+      font-size: .85rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    /* ── Scale visualization ── */
+    .scale-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+      margin-top: 60px;
+    }
+
+    .scale-item {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 12px;
+      text-align: center;
+      transition: border-color .2s, background .2s;
+    }
+
+    .scale-item:hover {
+      border-color: var(--accent-dim);
+      background: var(--bg3);
+    }
+
+    .scale-item-icon { font-size: 1.3rem; margin-bottom: 8px; display: block; }
+
+    .scale-item-label {
+      font-size: .65rem;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    /* ── Pipeline rail ── */
+    .pipeline {
+      display: flex;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-top: 60px;
+    }
+
+    .pipe-step {
+      flex: 1;
+      padding: 26px 16px;
+      text-align: center;
+      border-right: 1px solid var(--border);
+      position: relative;
+    }
+
+    .pipe-step:last-child { border-right: none; }
+
+    .pipe-step::after {
+      content: '→';
+      position: absolute;
+      right: -10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--accent-dim);
+      font-size: .8rem;
+      z-index: 1;
+    }
+
+    .pipe-step:last-child::after { display: none; }
+
+    .pipe-icon { font-size: 1.5rem; margin-bottom: 8px; display: block; }
+
+    .pipe-label {
+      font-size: .68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .pipe-state {
+      font-size: .6rem;
+      color: var(--green);
+      font-family: "SF Mono", "Fira Code", monospace;
+    }
+
+    /* ── Terminal ── */
+    .terminal {
+      background: #050508;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 28px;
+      font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+      font-size: .82rem;
+      line-height: 1.85;
+      overflow-x: auto;
+    }
+
+    .terminal-bar {
+      display: flex;
+      gap: 7px;
+      margin-bottom: 20px;
+    }
+
+    .t-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .t-red { background: #ff5f57; }
+    .t-yellow { background: #febc2e; }
+    .t-green-dot { background: #28c840; }
+
+    .t-prompt { color: var(--accent); }
+    .t-cmd { color: var(--text); }
+    .t-comment { color: #3a3a4a; }
+    .t-ok { color: var(--green); }
+    .t-dim { color: #333; }
+    .t-val { color: #a89cff; }
+
+    /* ── CTA ── */
+    .cta-section {
+      text-align: center;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 90px 40px;
+      margin: 0 48px 100px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-glow {
+      position: absolute;
+      top: -80px; left: 50%;
+      transform: translateX(-50%);
+      width: 500px; height: 300px;
+      background: radial-gradient(ellipse, rgba(124,108,252,.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .cta-section h2 {
+      max-width: 600px;
+      margin: 0 auto 16px;
+      position: relative;
+    }
+
+    .cta-section p {
+      color: var(--muted);
+      margin-bottom: 40px;
+      font-size: 1.05rem;
+      position: relative;
+    }
+
+    .cta-row {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      position: relative;
+    }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 36px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: .84rem;
+    }
+
+    .footer-logo {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-weight: 800;
+      color: var(--text);
+      font-size: 1rem;
+    }
+
+    .footer-links { display: flex; gap: 28px; }
+    .footer-links a:hover { color: var(--text); }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      nav { padding: 14px 24px; }
+      .nav-links { display: none; }
+      .hero { padding: 70px 24px 50px; }
+      section { padding: 70px 24px; }
+      .stats { margin: 0 24px; flex-wrap: wrap; }
+      .stat { border-right: none; border-bottom: 1px solid var(--border); }
+      .problem-grid, .features-grid, .steps { grid-template-columns: 1fr; }
+      .scale-grid { grid-template-columns: repeat(3, 1fr); }
+      .pipeline { flex-direction: column; }
+      .pipe-step { border-right: none; border-bottom: 1px solid var(--border); }
+      .pipe-step:last-child { border-bottom: none; }
+      .pipe-step::after { display: none; }
+      .cta-section { margin: 0 24px 60px; padding: 60px 24px; }
+      footer { flex-direction: column; gap: 16px; text-align: center; }
+    }
+
+    @media (max-width: 600px) {
+      .reel-card:nth-child(4), .reel-card:nth-child(5) { display: none; }
+      .scale-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <div class="nav-logo">
+      Forge
+    </div>
+    <ul class="nav-links">
+      <li><a href="#how-it-works">How it works</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#scale">Scale</a></li>
+    </ul>
+    <a href="/create" class="nav-cta">Start for free</a>
+  </nav>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="badge">
+      <div class="badge-dot"></div>
+      AI-Powered UGC Generation
+    </div>
+    <h1>UGC at scale.<br /><span class="grad">No creators needed.</span></h1>
+    <p class="hero-sub">
+      Forge generates authentic, platform-native video content for any persona, any niche, any brand — fully automated from brief to publish.
+    </p>
+    <div class="hero-actions">
+      <a href="/create" class="btn-primary">Generate your first Reel →</a>
+    </div>
+  </div>
+
+  <!-- Persona showcase -->
+  <div class="showcase-wrap">
+    <div class="showcase-label">Any persona. Any niche. Any day.</div>
+    <div class="reel-row" aria-hidden="true">
+      <div class="reel-card rc1">
+        <div class="reel-overlay">
+          <div class="reel-avatar av1">A</div>
+          <div class="reel-niche">Skincare</div>
+          <div class="reel-hook">"I tried 14 serums. This is the only one that actually worked in 7 days."</div>
+          <div class="reel-views">2.4M views</div>
+        </div>
+      </div>
+      <div class="reel-card rc2">
+        <div class="reel-overlay">
+          <div class="reel-avatar av2">M</div>
+          <div class="reel-niche">Fitness</div>
+          <div class="reel-hook">"Stop doing cardio before weights. Here's what the science actually says."</div>
+          <div class="reel-views">1.8M views</div>
+        </div>
+      </div>
+      <div class="reel-card rc3">
+        <div class="reel-overlay">
+          <div class="reel-avatar av3">J</div>
+          <div class="reel-niche">Personal Finance</div>
+          <div class="reel-hook">"I made $600 last month doing nothing. Here's the exact account I used."</div>
+          <div class="reel-views">3.1M views</div>
+        </div>
+      </div>
+      <div class="reel-card rc4">
+        <div class="reel-overlay">
+          <div class="reel-avatar av4">K</div>
+          <div class="reel-niche">Travel</div>
+          <div class="reel-hook">"Flights to Tokyo for $380. The trick nobody talks about on these apps."</div>
+          <div class="reel-views">980K views</div>
+        </div>
+      </div>
+      <div class="reel-card rc5">
+        <div class="reel-overlay">
+          <div class="reel-avatar av5">R</div>
+          <div class="reel-niche">Food</div>
+          <div class="reel-hook">"Gordon Ramsay's pasta secret. 3 ingredients. 12 minutes. Actually incredible."</div>
+          <div class="reel-views">4.2M views</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat">
+      <span class="stat-number">∞</span>
+      <div class="stat-label">Personas you can create</div>
+    </div>
+    <div class="stat">
+      <span class="stat-number">40s</span>
+      <div class="stat-label">From brief to publish-ready Reel</div>
+    </div>
+    <div class="stat">
+      <span class="stat-number">5</span>
+      <div class="stat-label">Fully automated pipeline stages</div>
+    </div>
+    <div class="stat">
+      <span class="stat-number">0</span>
+      <div class="stat-label">Human creators required</div>
+    </div>
+  </div>
+
+  <!-- Problem -->
+  <section>
+    <div class="section-label">The problem</div>
+    <h2>UGC works. Producing it at scale doesn't.</h2>
+    <p class="section-sub">
+      Brands know UGC outperforms polished ads. The problem is it's slow, expensive, and nearly impossible to keep consistent.
+    </p>
+    <div class="problem-grid">
+      <div class="problem-card">
+        <div class="problem-icon">💸</div>
+        <h3>Creator costs don't scale</h3>
+        <p>A single UGC creator delivers 4–8 videos a month at $150–$500 each. Running 10 personas across 5 niches means tens of thousands per month — before editing.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">🐌</div>
+        <h3>Feedback loops kill momentum</h3>
+        <p>Brief → creator → revision → approval takes weeks. By the time content is ready, the trend is dead and the ad window has closed.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">🎲</div>
+        <h3>Quality is a lottery</h3>
+        <p>Tone, pacing, script quality, and on-screen energy vary wildly between creators. Consistent brand voice at volume is nearly impossible to enforce.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">⚖️</div>
+        <h3>Compliance is an afterthought</h3>
+        <p>Creators don't know your legal requirements. Claims that violate platform rules or regulations slip through — and you're the one liable when they do.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section id="how-it-works">
+    <div class="section-label">How it works</div>
+    <h2>Brief in.<br />Publish-ready Reel out.</h2>
+    <p class="section-sub">
+      A five-stage automated pipeline takes your persona and content brief to a platform-native video — no human in the loop.
+    </p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-number">Step 01</div>
+        <span class="step-icon">🧠</span>
+        <h3>Script generation</h3>
+        <p>
+          Forge uses your persona definition — voice, tone, niche, audience — to generate a structured script via AI. Hook, problem, agitate, solution, CTA. Platform-native pacing. No generic copy.
+        </p>
+      </div>
+      <div class="step">
+        <div class="step-number">Step 02</div>
+        <span class="step-icon">🛡️</span>
+        <h3>Compliance check</h3>
+        <p>
+          Before a frame is generated, the script is audited against your compliance rules. Claim violations, disallowed language, and platform policy triggers get flagged and blocked — not published.
+        </p>
+      </div>
+      <div class="step">
+        <div class="step-number">Step 03</div>
+        <span class="step-icon">🎬</span>
+        <h3>AI video & publish</h3>
+        <p>
+          The script ships to the video generation model with your persona's visual identity, camera style, and performance direction. The returned video passes a QA check, then lands in your publish queue.
+        </p>
+      </div>
+    </div>
+
+    <div class="terminal" style="margin-top:24px;">
+      <div class="terminal-bar">
+        <div class="t-dot t-red"></div>
+        <div class="t-dot t-yellow"></div>
+        <div class="t-dot t-green-dot"></div>
+      </div>
+      <div><span class="t-comment"># Configure your persona once</span></div>
+      <div><span class="t-prompt">$ </span><span class="t-cmd">forge persona create <span class="t-val">--name "Alex" --niche fitness --tone "direct, science-backed"</span></span></div>
+      <div class="t-dim">&nbsp;</div>
+      <div><span class="t-comment"># Run the full pipeline</span></div>
+      <div><span class="t-prompt">$ </span><span class="t-cmd">forge generate</span></div>
+      <div><span class="t-ok">✓ Content pillar selected: myth_bust (Wednesday)</span></div>
+      <div><span class="t-ok">✓ Script generated: 38s · hook_type: provocative_claim</span></div>
+      <div><span class="t-ok">✓ Compliance check passed</span></div>
+      <div><span class="t-ok">✓ Video generation job submitted</span></div>
+      <div><span class="t-ok">✓ Media QA passed · reel.mp4 ready for publish</span></div>
+      <div class="t-dim">&nbsp;</div>
+      <div><span class="t-comment"># Publish anywhere</span></div>
+      <div><span class="t-prompt">$ </span><span class="t-cmd">forge publish --platform <span class="t-val">instagram tiktok</span></span></div>
+      <div><span class="t-ok">✓ Published to 2 platforms · link in bio live</span></div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features">
+    <div class="section-label">Features</div>
+    <h2>Everything UGC at scale requires.</h2>
+    <p class="section-sub">Built from the ground up for volume — not one-off content creation.</p>
+    <div class="features-grid">
+      <div class="feature">
+        <div class="feature-icon">🧬</div>
+        <h3>Persona engine</h3>
+        <p>Define any creator persona — voice, tone, visual identity, backstory, niche — and generate consistent content for it indefinitely.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">✍️</div>
+        <h3>AI script generation</h3>
+        <p>Scripts are structured as Hook → Problem → Agitate → Solution → CTA. Platform-native pacing, specific numbers, no filler.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🎬</div>
+        <h3>AI video with lip sync</h3>
+        <p>Full spoken Reels with matching lip sync, natural camera movement, and consistent visual identity. No studio, no crew.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📅</div>
+        <h3>Content calendar automation</h3>
+        <p>The scheduler rotates content pillars across the week — education, myth bust, story, walkthrough — so your feed never feels repetitive.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">⚖️</div>
+        <h3>Compliance engine</h3>
+        <p>Custom rule sets per brand. Rate claims, guarantees, restricted phrases — anything that fails blocks the pipeline before video generation starts.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📲</div>
+        <h3>Multi-platform publish</h3>
+        <p>Instagram Reels, Facebook, TikTok — publish directly from the pipeline or export a handoff package for manual review.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🔍</div>
+        <h3>Media QA</h3>
+        <p>Every video is inspected for identity match, script accuracy, no overlaid text, no logos, natural camera, and usable audio before publish.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">⚡</div>
+        <h3>Parallel generation</h3>
+        <p>Run multiple personas simultaneously. 10 videos a day is the same effort as one — the pipeline scales horizontally without a cost cliff.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🧪</div>
+        <h3>Mock mode for testing</h3>
+        <p>Run the full pipeline locally without API keys. Mock providers simulate every stage so you can test flows without spending budget.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Scale section -->
+  <section id="scale">
+    <div class="section-label">Built for scale</div>
+    <h2>One pipeline.<br />Any niche. Any volume.</h2>
+    <p class="section-sub">Forge isn't a content tool — it's a content factory. Define a persona once, generate indefinitely.</p>
+
+    <div class="scale-grid">
+      <div class="scale-item">
+        <span class="scale-item-icon">💪</span>
+        <div class="scale-item-label">Fitness</div>
+      </div>
+      <div class="scale-item">
+        <span class="scale-item-icon">✨</span>
+        <div class="scale-item-label">Beauty</div>
+      </div>
+      <div class="scale-item">
+        <span class="scale-item-icon">💰</span>
+        <div class="scale-item-label">Finance</div>
+      </div>
+      <div class="scale-item">
+        <span class="scale-item-icon">🏠</span>
+        <div class="scale-item-label">Real estate</div>
+      </div>
+      <div class="scale-item">
+        <span class="scale-item-icon">✈️</span>
+        <div class="scale-item-label">Travel</div>
+      </div>
+      <div class="scale-item">
+        <span class="scale-item-icon">🍳</span>
+        <div class="scale-item-label">Food</div>
+      </div>
+      <div class="scale-item">
+        <span class="scale-item-icon">👗</span>
+        <div class="scale-item-label">Fashion</div>
+      </div>
+      <div class="scale-item">
+        <span class="scale-item-icon">🎮</span>
+        <div class="scale-item-label">Gaming</div>
+      </div>
+      <div class="scale-item">
+        <span class="scale-item-icon">🐾</span>
+        <div class="scale-item-label">Pets</div>
+      </div>
+      <div class="scale-item">
+        <span class="scale-item-icon">📚</span>
+        <div class="scale-item-label">Education</div>
+      </div>
+      <div class="scale-item">
+        <span class="scale-item-icon">🧘</span>
+        <div class="scale-item-label">Wellness</div>
+      </div>
+      <div class="scale-item">
+        <span class="scale-item-icon">⚙️</span>
+        <div class="scale-item-label">Your niche</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pipeline -->
+  <section>
+    <div class="section-label">The pipeline</div>
+    <h2>Five stages. Zero gaps.</h2>
+    <p class="section-sub">Each stage is discrete and inspectable. The pipeline never skips a step or ships without passing every check.</p>
+
+    <div class="pipeline">
+      <div class="pipe-step">
+        <span class="pipe-icon">📋</span>
+        <div class="pipe-label">Brief</div>
+        <div class="pipe-state">planned</div>
+      </div>
+      <div class="pipe-step">
+        <span class="pipe-icon">✍️</span>
+        <div class="pipe-label">Script</div>
+        <div class="pipe-state">scripted</div>
+      </div>
+      <div class="pipe-step">
+        <span class="pipe-icon">🛡️</span>
+        <div class="pipe-label">Compliance</div>
+        <div class="pipe-state">script_checked</div>
+      </div>
+      <div class="pipe-step">
+        <span class="pipe-icon">🎬</span>
+        <div class="pipe-label">Video gen</div>
+        <div class="pipe-state">generating</div>
+      </div>
+      <div class="pipe-step">
+        <span class="pipe-icon">🔍</span>
+        <div class="pipe-label">Media QA</div>
+        <div class="pipe-state">media_checked</div>
+      </div>
+      <div class="pipe-step">
+        <span class="pipe-icon">🚀</span>
+        <div class="pipe-label">Publish</div>
+        <div class="pipe-state">ready_for_handoff</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <div class="cta-section" id="get-started">
+    <div class="cta-glow"></div>
+    <div class="section-label">Get started</div>
+    <h2>Stop paying for creators. Start generating content.</h2>
+    <p>Define a persona, run the pipeline, publish. The first Reel takes minutes to configure. The rest run on autopilot.</p>
+    <div class="cta-row">
+      <a href="/create" class="btn-primary">Start generating →</a>
+      <a href="#how-it-works" class="btn-secondary">Read the docs</a>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-logo">
+      Forge
+    </div>
+    <div class="footer-links">
+      <a href="#how-it-works">How it works</a>
+      <a href="#features">Features</a>
+      <a href="#scale">Scale</a>
+      <a href="#get-started">Get started</a>
+    </div>
+    <div>AI UGC at scale. No creators required.</div>
+  </footer>
+
+</body>
+</html>

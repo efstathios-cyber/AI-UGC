@@ -1,0 +1,22 @@
+{
+  "name": "sarah-ugc-ai-creator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test dist/**/*.test.js",
+    "check": "npm run build && npm test",
+    "generate": "npm run build && node dist/cli/generate.js",
+    "preview:seed": "npm run build && node dist/cli/preview-seed-dance-payload.js",
+    "meta:exchange-token": "npm run build && node dist/cli/meta-exchange-token.js",
+    "meta:discover": "npm run build && node dist/cli/meta-discover.js",
+    "instagram:publish-latest": "npm run build && node dist/cli/instagram-publish-latest.js",
+    "facebook:post-latest": "npm run build && node dist/cli/facebook-post-latest.js",
+    "serve": "npm run build && node dist/server/server.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "typescript": "^5.4.5"
+  }
+}

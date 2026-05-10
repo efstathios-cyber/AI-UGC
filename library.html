@@ -1,0 +1,2072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Library — Forge</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #08080a;
+      --bg2: #101014;
+      --bg3: #16161c;
+      --border: #222228;
+      --text: #f5f5f7;
+      --muted: #8e8e9a;
+      --accent: #7c6cfc;
+      --accent-dim: #4a3fb5;
+      --accent-glow: rgba(124,108,252,.18);
+      --green: #22c55e;
+      --radius: 12px;
+      --font: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* ── Nav ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 40px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(8,8,10,.92);
+      backdrop-filter: blur(14px);
+      z-index: 50;
+    }
+
+    .nav-left { display: flex; align-items: center; gap: 28px; }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 1.05rem;
+      letter-spacing: -.02em;
+    }
+
+    .logo-mark {
+      width: 26px; height: 26px;
+      border-radius: 6px;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .8rem;
+      font-weight: 900;
+      color: #fff;
+    }
+
+    .nav-link {
+      font-size: .875rem;
+      color: var(--muted);
+      transition: color .15s;
+    }
+
+    .nav-link:hover, .nav-link.active { color: var(--text); }
+
+    .btn-create {
+      padding: 8px 20px;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 8px;
+      font-size: .84rem;
+      font-weight: 600;
+      transition: opacity .15s;
+    }
+
+    .btn-create:hover { opacity: .86; }
+
+    /* ── Main ── */
+    main { max-width: 1200px; margin: 0 auto; padding: 48px 40px 100px; }
+
+    .page-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 40px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .page-header h1 {
+      font-size: 1.8rem;
+      font-weight: 800;
+      letter-spacing: -.04em;
+    }
+
+    .video-count {
+      font-size: .82rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* ── Filter bar ── */
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 6px 14px;
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      background: transparent;
+      color: var(--muted);
+      font-family: var(--font);
+      font-size: .78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color .15s, color .15s, background .15s;
+    }
+
+    .filter-btn:hover { border-color: var(--muted); color: var(--text); }
+    .filter-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
+
+    /* ── Grid ── */
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 16px;
+    }
+
+    .video-card {
+      aspect-ratio: 9/16;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--bg2);
+      overflow: hidden;
+      position: relative;
+      cursor: pointer;
+      transition: border-color .2s, transform .25s cubic-bezier(.22,1,.36,1), box-shadow .2s;
+    }
+
+    .video-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 0 16px 40px rgba(0,0,0,.4), 0 0 0 1px rgba(124,108,252,.2);
+    }
+
+    .video-card video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;
+    }
+
+    .card-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, transparent 35%, rgba(0,0,0,.92) 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 14px 12px;
+      opacity: 1;
+      transition: opacity .2s;
+    }
+
+    .card-play {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.15);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      transition: background .2s, transform .2s;
+    }
+
+    .video-card:hover .card-play {
+      background: var(--accent);
+      transform: translate(-50%, -50%) scale(1.1);
+    }
+
+    .card-pillar {
+      font-size: .55rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: rgba(255,255,255,.5);
+      margin-bottom: 5px;
+    }
+
+    .card-hook {
+      font-size: .7rem;
+      font-weight: 600;
+      line-height: 1.35;
+      color: #fff;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-date {
+      font-size: .58rem;
+      color: rgba(255,255,255,.35);
+      margin-top: 6px;
+      font-family: monospace;
+    }
+
+    /* ── Empty state ── */
+    .empty {
+      grid-column: 1/-1;
+      text-align: center;
+      padding: 80px 40px;
+      color: var(--muted);
+    }
+
+    .empty-icon { font-size: 3rem; margin-bottom: 16px; }
+    .empty h2 { font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+    .empty p { font-size: .875rem; }
+
+    /* ── Loading skeleton ── */
+    .skeleton {
+      aspect-ratio: 9/16;
+      border-radius: 14px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      animation: shimmer 1.4s ease-in-out infinite;
+    }
+
+    @keyframes shimmer {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .4; }
+    }
+
+    /* ── Modal ── */
+    #modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(0,0,0,.85);
+      backdrop-filter: blur(8px);
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    #modal.open { display: flex; }
+
+    .modal-inner {
+      display: flex;
+      gap: 28px;
+      max-width: 1000px;
+      width: 100%;
+      max-height: 92vh;
+      animation: modal-in .25s cubic-bezier(.22,1,.36,1);
+    }
+
+    @keyframes modal-in {
+      from { opacity: 0; transform: scale(.95); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    /* ── Video pane ── */
+    .modal-video-pane {
+      flex-shrink: 0;
+      width: min(340px, 38vw);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .video-player-wrap {
+      width: 100%;
+      aspect-ratio: 9/16;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #000;
+      border: 1px solid var(--border);
+      position: relative;
+    }
+
+    #modal-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .video-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-icon {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: .95rem;
+      color: var(--muted);
+      transition: border-color .15s, color .15s;
+    }
+
+    .btn-icon:hover { border-color: var(--accent); color: var(--text); }
+
+    .download-link {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: .8rem;
+      color: var(--muted);
+      margin-left: auto;
+      transition: border-color .15s, color .15s;
+    }
+
+    .download-link:hover { border-color: var(--accent); color: var(--text); }
+
+    /* ── Script pane ── */
+    .modal-script-pane {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding-right: 4px;
+    }
+
+    .modal-script-pane::-webkit-scrollbar { width: 4px; }
+    .modal-script-pane::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .modal-close {
+      position: absolute;
+      top: 20px; right: 20px;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.1rem;
+      color: var(--muted);
+      z-index: 10;
+      transition: border-color .15s, color .15s;
+    }
+
+    .modal-close:hover { border-color: var(--text); color: var(--text); }
+
+    .script-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .script-title {
+      font-size: 1rem;
+      font-weight: 700;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 100px;
+      font-size: .68rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .pill-accent { border-color: rgba(124,108,252,.3); color: #a89cff; background: var(--accent-glow); }
+
+    .section-block {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .section-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-row:last-child { border-bottom: none; }
+
+    .section-label {
+      font-size: .62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .09em;
+      width: 60px;
+      flex-shrink: 0;
+      padding-top: 2px;
+      color: var(--muted);
+    }
+
+    .section-label.hook   { color: #f59e0b; }
+    .section-label.cta    { color: var(--accent); }
+
+    .section-text {
+      font-size: .875rem;
+      line-height: 1.65;
+      color: var(--text);
+    }
+
+    .full-script-block {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    .full-script-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .full-script-label {
+      font-size: .65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--muted);
+    }
+
+    .copy-btn {
+      padding: 5px 12px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-family: var(--font);
+      font-size: .72rem;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      transition: border-color .15s, color .15s;
+    }
+
+    .copy-btn:hover { border-color: var(--accent); color: var(--text); }
+    .copy-btn.copied { border-color: var(--green); color: var(--green); }
+
+    .full-script-text {
+      font-size: .875rem;
+      line-height: 1.75;
+      color: var(--text);
+      font-style: italic;
+    }
+
+    .caption-block {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    .caption-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .caption-label {
+      font-size: .65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--muted);
+    }
+
+    .caption-text {
+      font-size: .85rem;
+      line-height: 1.65;
+      color: var(--text);
+      white-space: pre-wrap;
+    }
+
+    .no-meta {
+      font-size: .82rem;
+      color: var(--muted);
+      font-style: italic;
+      padding: 16px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    /* ── Launch campaign button ── */
+    .btn-launch {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #7c6cfc 0%, #5b8def 100%);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-family: var(--font);
+      font-size: .95rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      letter-spacing: -.01em;
+      box-shadow: 0 0 28px rgba(124,108,252,.28);
+      transition: opacity .15s, transform .1s;
+    }
+    .btn-launch:hover { opacity: .88; transform: translateY(-1px); }
+    .btn-launch:active { transform: translateY(0); }
+
+    /* ── Campaign overlay ── */
+    #campaign-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      background: rgba(4,4,6,.96);
+      backdrop-filter: blur(24px);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+    }
+    #campaign-overlay.open { display: flex; }
+
+    .cmp-stage {
+      position: relative;
+      width: 320px;
+      height: 320px;
+      flex-shrink: 0;
+    }
+
+    /* Pulsing rings behind everything */
+    .cmp-ring {
+      position: absolute;
+      top: 50%; left: 50%;
+      border-radius: 50%;
+      border: 1px solid rgba(124,108,252,.18);
+      transform: translate(-50%,-50%) scale(.5);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .cmp-ring-1 { width: 160px; height: 160px; animation: ring-out 2.4s ease-out .2s infinite; }
+    .cmp-ring-2 { width: 220px; height: 220px; animation: ring-out 2.4s ease-out .8s infinite; }
+    .cmp-ring-3 { width: 290px; height: 290px; animation: ring-out 2.4s ease-out 1.4s infinite; }
+
+    @keyframes ring-out {
+      0%   { opacity: .7; transform: translate(-50%,-50%) scale(.5); }
+      100% { opacity: 0;  transform: translate(-50%,-50%) scale(1); }
+    }
+
+    .cmp-center {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      width: 76px; height: 76px;
+      border-radius: 22px;
+      background: linear-gradient(135deg, #7c6cfc, #5b8def);
+      box-shadow: 0 0 56px rgba(124,108,252,.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.2rem;
+      z-index: 3;
+      animation: center-breathe 2s ease-in-out infinite;
+    }
+
+    @keyframes center-breathe {
+      0%, 100% { box-shadow: 0 0 40px rgba(124,108,252,.4); }
+      50%       { box-shadow: 0 0 72px rgba(124,108,252,.7); }
+    }
+
+    /* Platform icons — diamond positions */
+    .cmp-icon {
+      position: absolute;
+      width: 72px; height: 72px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: translate(-50%,-50%) scale(0);
+      opacity: 0;
+      z-index: 2;
+    }
+
+    .cmp-icon[data-p="ig"] { top: 6%;  left: 50%; }
+    .cmp-icon[data-p="fb"] { top: 50%; left: 94%; }
+    .cmp-icon[data-p="tt"] { top: 94%; left: 50%; }
+    .cmp-icon[data-p="x"]  { top: 50%; left: 6%;  }
+
+    .cmp-icon.burst {
+      animation: icon-pop .52s cubic-bezier(.34,1.56,.64,1) forwards;
+    }
+
+    @keyframes icon-pop {
+      0%   { opacity: 0; transform: translate(-50%,-50%) scale(.15); }
+      65%  { opacity: 1; transform: translate(-50%,-50%) scale(1.12); }
+      100% { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+    }
+
+    .cmp-check {
+      position: absolute;
+      bottom: -8px; right: -8px;
+      width: 24px; height: 24px;
+      background: var(--green);
+      border: 2.5px solid #04040606;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .65rem;
+      font-weight: 800;
+      color: #fff;
+      transform: scale(0);
+      transition: transform .28s cubic-bezier(.34,1.56,.64,1);
+    }
+
+    .cmp-icon.checked .cmp-check { transform: scale(1); }
+
+    /* Connector lines from center to each icon */
+    .cmp-line {
+      position: absolute;
+      top: 50%; left: 50%;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(124,108,252,.6), transparent);
+      transform-origin: left center;
+      opacity: 0;
+      transition: opacity .3s;
+      pointer-events: none;
+    }
+
+    .cmp-line.visible { opacity: 1; }
+
+    /* Text below stage */
+    .cmp-text {
+      text-align: center;
+      margin-top: 40px;
+    }
+
+    .cmp-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: -.03em;
+      color: var(--text);
+      margin-bottom: 6px;
+      transition: color .4s;
+    }
+
+    .cmp-title.success { color: var(--green); }
+
+    .cmp-subtitle {
+      font-size: .875rem;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+
+    .cmp-plat-row {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+    }
+
+    .cmp-plat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      opacity: .3;
+      transition: opacity .3s;
+    }
+
+    .cmp-plat.live { opacity: 1; }
+
+    .cmp-plat-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      transform: scale(0);
+      transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+    }
+
+    .cmp-plat.live .cmp-plat-dot { transform: scale(1); }
+
+    .cmp-plat-name {
+      font-size: .7rem;
+      font-weight: 600;
+      color: var(--muted);
+      transition: color .3s;
+    }
+
+    .cmp-plat.live .cmp-plat-name { color: var(--text); }
+
+    .cmp-dismiss {
+      margin-top: 36px;
+      font-size: .75rem;
+      color: #444;
+      cursor: pointer;
+      transition: color .15s;
+      letter-spacing: .02em;
+    }
+
+    .cmp-dismiss:hover { color: var(--muted); }
+
+    /* ── Responsive ── */
+    @media (max-width: 720px) {
+      nav, main { padding-left: 20px; padding-right: 20px; }
+      .modal-inner { flex-direction: column; overflow-y: auto; }
+      .modal-video-pane { width: 100%; }
+      .video-player-wrap { aspect-ratio: 9/16; max-height: 55vw; aspect-ratio: unset; }
+      #modal-video { height: 55vw; }
+    }
+
+    /* ══════════════════════════════════════════
+       ANALYTICS PAGE
+    ══════════════════════════════════════════ */
+    #analytics-page { display: none; }
+    #analytics-page.page-visible { display: block; }
+    #library-page { display: block; }
+    #library-page.page-hidden { display: none; }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+      gap: 14px;
+      margin-bottom: 32px;
+    }
+
+    .kpi-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 18px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    .kpi-card:hover {
+      border-color: rgba(124,108,252,.4);
+      box-shadow: 0 0 28px rgba(124,108,252,.08);
+    }
+
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), #a78bfa);
+      opacity: 0;
+      transition: opacity .2s;
+    }
+
+    .kpi-card:hover::before { opacity: 1; }
+
+    .kpi-label {
+      font-size: .63rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .kpi-value {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -.04em;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .kpi-delta {
+      font-size: .72rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .kpi-delta.up { color: #22c55e; }
+    .kpi-delta.down { color: #ef4444; }
+
+    .kpi-bg-icon {
+      position: absolute;
+      bottom: -8px; right: -4px;
+      font-size: 3.8rem;
+      opacity: .05;
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    .analytics-section { margin-bottom: 36px; }
+
+    .section-heading {
+      font-size: .65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: var(--muted);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-heading::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* Campaign leaderboard */
+    .campaign-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .campaign-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      display: grid;
+      grid-template-columns: 36px 1fr auto;
+      align-items: center;
+      gap: 16px;
+      transition: border-color .2s, transform .2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .campaign-card:hover { border-color: rgba(124,108,252,.35); transform: translateX(4px); }
+
+    .campaign-card.gold {
+      border-color: rgba(251,191,36,.5);
+      background: linear-gradient(135deg, rgba(251,191,36,.07) 0%, var(--bg2) 55%);
+    }
+
+    .campaign-rank { font-size: 1.1rem; font-weight: 900; color: var(--muted); text-align: center; }
+    .campaign-rank.r1 { color: #fbbf24; font-size: 1.3rem; }
+    .campaign-rank.r2 { color: #94a3b8; }
+    .campaign-rank.r3 { color: #cd7c54; }
+
+    .campaign-info { min-width: 0; }
+
+    .campaign-name {
+      font-size: .88rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 7px;
+    }
+
+    .campaign-bar-wrap {
+      height: 4px;
+      background: var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .campaign-bar {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--accent), #a78bfa);
+      width: 0;
+      transition: width 1.4s cubic-bezier(.22,1,.36,1);
+    }
+
+    .campaign-card.gold .campaign-bar { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+
+    .campaign-metrics { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+
+    .campaign-views { font-size: .9rem; font-weight: 800; letter-spacing: -.02em; }
+
+    .campaign-eng {
+      font-size: .63rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 100px;
+      background: var(--accent-glow);
+      color: #a89cff;
+      border: 1px solid rgba(124,108,252,.2);
+    }
+
+    .campaign-card.gold .campaign-eng {
+      background: rgba(251,191,36,.1);
+      color: #fbbf24;
+      border-color: rgba(251,191,36,.25);
+    }
+
+    /* Charts row */
+    .charts-row {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    @media (max-width: 860px) { .charts-row { grid-template-columns: 1fr; } }
+
+    .chart-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+
+    .chart-title {
+      font-size: .63rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+
+    /* Weekly bar chart */
+    .bar-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 7px;
+      height: 110px;
+    }
+
+    .bar-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      height: 100%;
+      justify-content: flex-end;
+    }
+
+    .bar-fill {
+      width: 100%;
+      border-radius: 4px 4px 0 0;
+      background: linear-gradient(180deg, var(--accent), var(--accent-dim));
+      transition: height 1.1s cubic-bezier(.22,1,.36,1);
+      position: relative;
+      cursor: default;
+    }
+
+    .bar-fill.peak { background: linear-gradient(180deg, #fbbf24, #f59e0b); }
+
+    .bar-fill:hover::after {
+      content: attr(data-val);
+      position: absolute;
+      bottom: calc(100% + 5px);
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: .6rem;
+      font-weight: 700;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      padding: 2px 7px;
+      border-radius: 4px;
+      white-space: nowrap;
+      color: var(--text);
+      pointer-events: none;
+    }
+
+    .bar-label { font-size: .55rem; color: var(--muted); text-align: center; }
+
+    /* Horizontal bar chart */
+    .hbar-list { display: flex; flex-direction: column; gap: 12px; }
+
+    .hbar-row { display: grid; grid-template-columns: 96px 1fr 48px; align-items: center; gap: 10px; }
+
+    .hbar-label { font-size: .7rem; font-weight: 600; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .hbar-track { height: 8px; background: var(--border); border-radius: 8px; overflow: hidden; }
+
+    .hbar-fill { height: 100%; border-radius: 8px; width: 0; transition: width 1.3s cubic-bezier(.22,1,.36,1); }
+
+    .hbar-val { font-size: .7rem; font-weight: 700; text-align: right; color: var(--text); }
+
+    /* Platform donut */
+    .donut-wrap { display: flex; align-items: center; gap: 24px; }
+
+    .donut {
+      width: 96px; height: 96px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: conic-gradient(
+        #7c6cfc 0% 41%,
+        #ec4899 41% 69%,
+        #f59e0b 69% 84%,
+        #22c55e 84% 100%
+      );
+      position: relative;
+    }
+
+    .donut::after {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      width: 58px; height: 58px;
+      border-radius: 50%;
+      background: var(--bg2);
+    }
+
+    .donut-legend { display: flex; flex-direction: column; gap: 9px; }
+
+    .legend-item { display: flex; align-items: center; gap: 8px; font-size: .72rem; }
+
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    .legend-name { color: var(--muted); flex: 1; }
+    .legend-pct { font-weight: 700; }
+
+    /* Score rings */
+    .score-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
+      gap: 14px;
+      margin-bottom: 32px;
+    }
+
+    .score-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 20px;
+      text-align: center;
+    }
+
+    .score-ring-wrap { position: relative; width: 82px; height: 82px; margin: 0 auto 14px; }
+
+    .score-ring-svg { transform: rotate(-90deg); width: 82px; height: 82px; }
+
+    .score-ring-bg { fill: none; stroke: var(--border); stroke-width: 7; }
+
+    .score-ring-fill {
+      fill: none;
+      stroke-width: 7;
+      stroke-linecap: round;
+      stroke-dasharray: 220;
+      stroke-dashoffset: 220;
+      transition: stroke-dashoffset 1.6s cubic-bezier(.22,1,.36,1);
+    }
+
+    .score-ring-val {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      font-size: 1.1rem;
+      font-weight: 900;
+      letter-spacing: -.03em;
+    }
+
+    .score-card-label {
+      font-size: .63rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    .score-card-sub { font-size: .7rem; color: var(--muted); line-height: 1.4; }
+
+    /* Heatmap */
+    .heatmap-outer {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 32px;
+    }
+
+    .heatmap-grid {
+      display: grid;
+      grid-template-columns: 42px repeat(7, 1fr);
+      gap: 3px;
+    }
+
+    .hmap-header { font-size: .57rem; font-weight: 700; text-align: center; color: var(--muted); padding-bottom: 3px; }
+
+    .hmap-row-label { font-size: .58rem; color: var(--muted); display: flex; align-items: center; }
+
+    .hmap-cell {
+      aspect-ratio: 1.4;
+      border-radius: 3px;
+      cursor: default;
+      transition: transform .15s;
+      position: relative;
+    }
+
+    .hmap-cell:hover { transform: scale(1.35); z-index: 5; }
+
+    .hmap-cell:hover::after {
+      content: attr(data-tip);
+      position: absolute;
+      bottom: calc(100% + 5px);
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: .6rem;
+      white-space: nowrap;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      padding: 3px 8px;
+      border-radius: 5px;
+      color: var(--text);
+      font-weight: 600;
+      z-index: 10;
+    }
+
+    /* Top hooks table */
+    .table-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 32px;
+    }
+
+    .hooks-table { width: 100%; border-collapse: collapse; }
+
+    .hooks-table th {
+      font-size: .6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .09em;
+      color: var(--muted);
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg3);
+    }
+
+    .hooks-table td {
+      font-size: .8rem;
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    .hooks-table tr:last-child td { border-bottom: none; }
+    .hooks-table tr:hover td { background: rgba(124,108,252,.03); }
+
+    .hook-text { color: var(--text); font-weight: 500; max-width: 260px; }
+    .hook-views { font-weight: 700; white-space: nowrap; }
+    .hook-eng { color: var(--muted); white-space: nowrap; }
+
+    .viral-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 9px;
+      border-radius: 100px;
+      font-size: .6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      white-space: nowrap;
+    }
+
+    .viral-badge.fire { background: rgba(239,68,68,.12); color: #f87171; border: 1px solid rgba(239,68,68,.2); }
+    .viral-badge.hot  { background: rgba(245,158,11,.12); color: #fbbf24; border: 1px solid rgba(245,158,11,.2); }
+    .viral-badge.ok   { background: rgba(34,197,94,.1);   color: #4ade80; border: 1px solid rgba(34,197,94,.15); }
+    .viral-badge.new  { background: rgba(124,108,252,.12); color: #a89cff; border: 1px solid rgba(124,108,252,.2); }
+
+    /* AI insights */
+    .insight-card {
+      background: linear-gradient(135deg, rgba(124,108,252,.09), rgba(124,108,252,.02));
+      border: 1px solid rgba(124,108,252,.28);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      display: flex;
+      gap: 16px;
+      margin-bottom: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .insight-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(124,108,252,.6), transparent);
+    }
+
+    .insight-icon { font-size: 2rem; flex-shrink: 0; line-height: 1; margin-top: 2px; }
+
+    .insight-title {
+      font-size: .65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: #a89cff;
+      margin-bottom: 7px;
+    }
+
+    .insight-text { font-size: .85rem; color: var(--text); line-height: 1.7; }
+    .insight-text strong { color: #fbbf24; }
+
+    /* Live banner */
+    .top-banner {
+      background: linear-gradient(90deg, rgba(251,191,36,.1), rgba(124,108,252,.08), rgba(236,72,153,.06));
+      border: 1px solid rgba(251,191,36,.28);
+      border-radius: var(--radius);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .banner-icon { font-size: 1.4rem; }
+    .banner-text { font-size: .84rem; line-height: 1.5; }
+    .banner-text strong { color: #fbbf24; }
+
+    /* Animated live dot */
+    .live-dot {
+      display: inline-block;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #22c55e;
+      margin-right: 5px;
+      vertical-align: middle;
+      animation: pulse-dot 1.6s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: .45; transform: scale(.65); }
+    }
+
+    /* Ticker */
+    .ticker-wrap {
+      overflow: hidden;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 0;
+      margin-bottom: 32px;
+    }
+
+    .ticker-inner {
+      display: flex;
+      gap: 48px;
+      animation: ticker-scroll 22s linear infinite;
+      white-space: nowrap;
+      will-change: transform;
+    }
+
+    .ticker-inner:hover { animation-play-state: paused; }
+
+    @keyframes ticker-scroll {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    .ticker-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: .72rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .ticker-item .t-val { color: var(--text); font-weight: 700; }
+    .ticker-item .t-up { color: #22c55e; }
+    .ticker-item .t-down { color: #ef4444; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-left">
+      <a href="/" class="nav-logo">
+        <div class="logo-mark">F</div>
+        Forge
+      </a>
+      <a href="/library" class="nav-link active" id="nav-library">Library</a>
+      <a href="/create" class="nav-link">Create</a>
+      <a href="#analytics" class="nav-link" id="nav-analytics">Analytics</a>
+    </div>
+    <a href="/create" class="btn-create">+ New Reel</a>
+  </nav>
+
+  <div id="library-page">
+  <main>
+    <div class="page-header">
+      <div>
+        <h1>Video library</h1>
+        <div class="video-count" id="video-count">Loading…</div>
+      </div>
+    </div>
+
+    <div class="filter-bar" id="filter-bar">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="handoff">Handoff packages</button>
+      <button class="filter-btn" data-filter="media">Raw media</button>
+    </div>
+
+    <div class="video-grid" id="video-grid">
+      <!-- skeletons while loading -->
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+    </div>
+  </main>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!--                  ANALYTICS PAGE                    -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <div id="analytics-page">
+  <main>
+
+    <!-- Live banner -->
+    <div class="top-banner">
+      <span class="banner-icon">🏆</span>
+      <div class="banner-text">
+        <strong>Summer Hustle Series</strong> is your #1 performing campaign — 12.4% engagement rate, 3.2× above industry average.
+        <span class="live-dot"></span><span style="color:var(--muted);font-size:.78rem">Live tracking</span>
+      </div>
+    </div>
+
+    <!-- Live ticker -->
+    <div class="ticker-wrap">
+      <div class="ticker-inner" id="ticker-inner">
+        <span class="ticker-item">TikTok Views <span class="t-val">1.24M</span> <span class="t-up">+18.4%</span></span>
+        <span class="ticker-item">Instagram Reels <span class="t-val">891K</span> <span class="t-up">+9.2%</span></span>
+        <span class="ticker-item">YouTube Shorts <span class="t-val">482K</span> <span class="t-up">+22.1%</span></span>
+        <span class="ticker-item">Avg Watch Time <span class="t-val">23.4s</span> <span class="t-up">+3.1s</span></span>
+        <span class="ticker-item">Virality Index <span class="t-val">8.7 / 10</span> <span class="t-up">NEW HIGH</span></span>
+        <span class="ticker-item">Followers Gained <span class="t-val">+14,203</span> <span class="t-up">+41%</span></span>
+        <span class="ticker-item">Revenue Attributed <span class="t-val">$84,320</span> <span class="t-up">+29%</span></span>
+        <span class="ticker-item">Saves Rate <span class="t-val">4.3%</span> <span class="t-up">+0.8%</span></span>
+        <!-- duplicate for seamless loop -->
+        <span class="ticker-item">TikTok Views <span class="t-val">1.24M</span> <span class="t-up">+18.4%</span></span>
+        <span class="ticker-item">Instagram Reels <span class="t-val">891K</span> <span class="t-up">+9.2%</span></span>
+        <span class="ticker-item">YouTube Shorts <span class="t-val">482K</span> <span class="t-up">+22.1%</span></span>
+        <span class="ticker-item">Avg Watch Time <span class="t-val">23.4s</span> <span class="t-up">+3.1s</span></span>
+        <span class="ticker-item">Virality Index <span class="t-val">8.7 / 10</span> <span class="t-up">NEW HIGH</span></span>
+        <span class="ticker-item">Followers Gained <span class="t-val">+14,203</span> <span class="t-up">+41%</span></span>
+        <span class="ticker-item">Revenue Attributed <span class="t-val">$84,320</span> <span class="t-up">+29%</span></span>
+        <span class="ticker-item">Saves Rate <span class="t-val">4.3%</span> <span class="t-up">+0.8%</span></span>
+      </div>
+    </div>
+
+    <!-- KPI cards -->
+    <div class="analytics-section">
+      <div class="section-heading">Overview — Last 30 days</div>
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Total Views</div>
+          <div class="kpi-value" data-count="2847392" data-fmt="abbr">2.8M</div>
+          <div class="kpi-delta up">▲ 31.2% vs last period</div>
+          <div class="kpi-bg-icon">👁</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Total Likes</div>
+          <div class="kpi-value" data-count="847103" data-fmt="abbr">847K</div>
+          <div class="kpi-delta up">▲ 24.7% vs last period</div>
+          <div class="kpi-bg-icon">❤️</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Comments</div>
+          <div class="kpi-value" data-count="124891" data-fmt="abbr">124K</div>
+          <div class="kpi-delta up">▲ 19.3% vs last period</div>
+          <div class="kpi-bg-icon">💬</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Shares</div>
+          <div class="kpi-value" data-count="312447" data-fmt="abbr">312K</div>
+          <div class="kpi-delta up">▲ 44.8% vs last period</div>
+          <div class="kpi-bg-icon">↗️</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Engagement Rate</div>
+          <div class="kpi-value">8.7%</div>
+          <div class="kpi-delta up">▲ 2.1pp — top 3% globally</div>
+          <div class="kpi-bg-icon">⚡</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Avg Watch Time</div>
+          <div class="kpi-value">23.4s</div>
+          <div class="kpi-delta up">▲ +3.1s vs benchmark</div>
+          <div class="kpi-bg-icon">⏱</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Followers Gained</div>
+          <div class="kpi-value" data-count="14203" data-fmt="comma">14,203</div>
+          <div class="kpi-delta up">▲ 41% vs last period</div>
+          <div class="kpi-bg-icon">🚀</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Revenue Attributed</div>
+          <div class="kpi-value">$84.3K</div>
+          <div class="kpi-delta up">▲ 29% vs last period</div>
+          <div class="kpi-bg-icon">💰</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts row -->
+    <div class="analytics-section">
+      <div class="section-heading">Performance breakdown</div>
+      <div class="charts-row">
+        <!-- Weekly views bar chart -->
+        <div class="chart-card">
+          <div class="chart-title">Weekly views — last 8 weeks</div>
+          <div class="bar-chart" id="bar-chart">
+            <!-- populated by JS -->
+          </div>
+        </div>
+
+        <!-- Platform donut -->
+        <div class="chart-card">
+          <div class="chart-title">Views by platform</div>
+          <div class="donut-wrap">
+            <div class="donut"></div>
+            <div class="donut-legend">
+              <div class="legend-item"><div class="legend-dot" style="background:#7c6cfc"></div><span class="legend-name">TikTok</span><span class="legend-pct">41%</span></div>
+              <div class="legend-item"><div class="legend-dot" style="background:#ec4899"></div><span class="legend-name">Instagram</span><span class="legend-pct">28%</span></div>
+              <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div><span class="legend-name">YT Shorts</span><span class="legend-pct">15%</span></div>
+              <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div><span class="legend-name">Facebook</span><span class="legend-pct">16%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Content pillar hbars -->
+      <div class="chart-card" style="margin-bottom:16px">
+        <div class="chart-title">Engagement rate by content pillar</div>
+        <div class="hbar-list" id="hbar-list">
+          <!-- populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Campaign leaderboard -->
+    <div class="analytics-section">
+      <div class="section-heading">Campaign leaderboard</div>
+      <div class="campaign-list" id="campaign-list">
+        <!-- populated by JS -->
+      </div>
+    </div>
+
+    <!-- AI score rings -->
+    <div class="analytics-section">
+      <div class="section-heading">AI performance scores</div>
+      <div class="score-grid" id="score-grid">
+        <!-- populated by JS -->
+      </div>
+    </div>
+
+    <!-- AI insights -->
+    <div class="insight-card">
+      <div class="insight-icon">🤖</div>
+      <div>
+        <div class="insight-title">Forge AI Recommendation</div>
+        <div class="insight-text">
+          Your <strong>Summer Hustle Series</strong> hooks that open with a pain-point question outperform statement hooks by <strong>3.7×</strong>.
+          Double down: the optimal post window is <strong>Tues–Thurs, 7–9 PM EST</strong> — your audience retention peaks during commute hours.
+          Predicted viral ceiling for your next reel using this formula: <strong>4.1M views</strong> within 72 hours.
+        </div>
+      </div>
+    </div>
+
+    <!-- Top performing hooks table -->
+    <div class="analytics-section">
+      <div class="section-heading">Top performing hooks</div>
+      <div class="table-card">
+        <table class="hooks-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Hook</th>
+              <th>Views</th>
+              <th>Eng. Rate</th>
+              <th>Watch Time</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="hooks-tbody">
+            <!-- populated by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Posting time heatmap -->
+    <div class="analytics-section">
+      <div class="section-heading">Best posting times (EST) — engagement heatmap</div>
+      <div class="heatmap-outer">
+        <div class="heatmap-grid" id="heatmap-grid">
+          <!-- populated by JS -->
+        </div>
+      </div>
+    </div>
+
+  </main>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" role="dialog" aria-modal="true">
+    <button class="modal-close" id="modal-close">✕</button>
+    <div class="modal-inner">
+      <!-- Left: video player -->
+      <div class="modal-video-pane">
+        <div class="video-player-wrap">
+          <video id="modal-video" controls playsinline autoplay loop>
+            Your browser does not support the video element.
+          </video>
+        </div>
+        <div class="video-controls">
+          <button class="btn-icon" id="btn-mute" title="Toggle mute">🔊</button>
+          <a class="download-link" id="download-link" download>↓ Download</a>
+        </div>
+      </div>
+
+      <!-- Right: script + caption -->
+      <div class="modal-script-pane" id="modal-script-pane">
+        <!-- populated by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Campaign overlay -->
+  <div id="campaign-overlay">
+    <div class="cmp-stage">
+      <div class="cmp-ring cmp-ring-1"></div>
+      <div class="cmp-ring cmp-ring-2"></div>
+      <div class="cmp-ring cmp-ring-3"></div>
+      <div class="cmp-center">🚀</div>
+
+      <!-- Instagram -->
+      <div class="cmp-icon" data-p="ig" style="background:linear-gradient(135deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%)">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+          <rect x="2" y="2" width="20" height="20" rx="5.5" stroke="white" stroke-width="1.8"/>
+          <circle cx="12" cy="12" r="4.5" stroke="white" stroke-width="1.8"/>
+          <circle cx="17.5" cy="6.5" r="1.3" fill="white"/>
+        </svg>
+        <div class="cmp-check">✓</div>
+      </div>
+
+      <!-- Facebook -->
+      <div class="cmp-icon" data-p="fb" style="background:#1877F2">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+          <path d="M13.5 10h3l-.5 3H13.5V22h-3V13H8v-3h2.5V8.5C10.5 6.3 11.8 5 14 5h2.5v3H15c-.6 0-.5.4-.5.9V10z"/>
+        </svg>
+        <div class="cmp-check">✓</div>
+      </div>
+
+      <!-- TikTok -->
+      <div class="cmp-icon" data-p="tt" style="background:#010101;box-shadow:inset 0 0 0 1px #2a2a2a">
+        <svg width="30" height="30" viewBox="0 0 24 24">
+          <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.2 8.2 0 004.78 1.52V6.76a4.87 4.87 0 01-1.01-.07z" fill="#EE1D52"/>
+          <path d="M18.58 5.62a4.83 4.83 0 01-3.76-4.18V1h-3.45v13.67a2.89 2.89 0 01-2.89 2.5 2.89 2.89 0 01-2.88-2.89 2.89 2.89 0 012.88-2.89c.29 0 .55.04.8.1V8.01a6.27 6.27 0 00-.8-.05A6.34 6.34 0 002.14 14.3a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V7.69a8.2 8.2 0 004.77 1.52V5.76a4.87 4.87 0 01-1-.14z" fill="white"/>
+        </svg>
+        <div class="cmp-check">✓</div>
+      </div>
+
+      <!-- X -->
+      <div class="cmp-icon" data-p="x" style="background:#000;box-shadow:inset 0 0 0 1px #2a2a2a">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.402 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+        </svg>
+        <div class="cmp-check">✓</div>
+      </div>
+    </div>
+
+    <div class="cmp-text">
+      <div class="cmp-title" id="cmp-title">Preparing launch…</div>
+      <div class="cmp-subtitle" id="cmp-subtitle">Broadcasting your content</div>
+      <div class="cmp-plat-row">
+        <div class="cmp-plat" id="cmp-ig"><div class="cmp-plat-dot"></div><span class="cmp-plat-name">Instagram</span></div>
+        <div class="cmp-plat" id="cmp-fb"><div class="cmp-plat-dot"></div><span class="cmp-plat-name">Facebook</span></div>
+        <div class="cmp-plat" id="cmp-tt"><div class="cmp-plat-dot"></div><span class="cmp-plat-name">TikTok</span></div>
+        <div class="cmp-plat" id="cmp-x"><div class="cmp-plat-dot"></div><span class="cmp-plat-name">X</span></div>
+      </div>
+    </div>
+
+    <div class="cmp-dismiss" id="cmp-dismiss">Click anywhere to dismiss</div>
+  </div>
+
+  <script>
+    let allVideos = [];
+    let currentFilter = 'all';
+
+    const grid = document.getElementById('video-grid');
+    const modal = document.getElementById('modal');
+    const modalVideo = document.getElementById('modal-video');
+    const modalClose = document.getElementById('modal-close');
+    const downloadLink = document.getElementById('download-link');
+    const btnMute = document.getElementById('btn-mute');
+    const scriptPane = document.getElementById('modal-script-pane');
+
+    function fmt(iso) {
+      if (!iso || iso === 'Invalid Date') return '';
+      const d = new Date(iso);
+      if (isNaN(d)) return '';
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function pillarLabel(p) {
+      return (p || '').replace(/_/g, ' ');
+    }
+
+    function renderGrid(videos) {
+      const count = document.getElementById('video-count');
+      count.textContent = `${videos.length} video${videos.length !== 1 ? 's' : ''}`;
+
+      if (videos.length === 0) {
+        grid.innerHTML = `
+          <div class="empty">
+            <div class="empty-icon">🎬</div>
+            <h2>No videos yet</h2>
+            <p>Run <code>npm run generate</code> to produce your first Reel, or use the Create page to build a script and generate via Higgsfield.</p>
+          </div>`;
+        return;
+      }
+
+      grid.innerHTML = videos.map((v, i) => `
+        <div class="video-card" data-index="${i}" tabindex="0" role="button" aria-label="Play ${v.hook}">
+          <video src="${v.videoUrl}" muted preload="metadata" tabindex="-1"></video>
+          <div class="card-overlay">
+            <div class="card-play">▶</div>
+            ${v.contentPillar ? `<div class="card-pillar">${pillarLabel(v.contentPillar)}</div>` : ''}
+            <div class="card-hook">${escHtml(v.hook)}</div>
+            <div class="card-date">${fmt(v.date)}</div>
+          </div>
+        </div>
+      `).join('');
+
+      // Hover preview
+      grid.querySelectorAll('.video-card').forEach((card, i) => {
+        const vid = card.querySelector('video');
+        card.addEventListener('mouseenter', () => { vid.play().catch(() => {}); });
+        card.addEventListener('mouseleave', () => { vid.pause(); vid.currentTime = 0; });
+        card.addEventListener('click', () => openModal(videos[i]));
+        card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') openModal(videos[i]); });
+      });
+    }
+
+    function openModal(video) {
+      modalVideo.src = video.videoUrl;
+      modalVideo.load();
+      modalVideo.play().catch(() => {});
+
+      downloadLink.href = video.videoUrl;
+      downloadLink.download = video.id + '.mp4';
+
+      // Build script pane
+      let html = `<div class="script-header">
+        <div class="script-title">${escHtml(video.hook || video.id)}</div>
+        ${video.contentPillar ? `<span class="pill pill-accent">${pillarLabel(video.contentPillar)}</span>` : ''}
+        ${video.runtimeSeconds ? `<span class="pill">${video.runtimeSeconds}s</span>` : ''}
+        ${video.date ? `<span class="pill">${fmt(video.date)}</span>` : ''}
+      </div>`;
+
+      if (video.fullScript) {
+        // Try to parse sections from the script via the notes structure
+        html += `<div class="section-block">
+          <div class="section-row">
+            <span class="section-label hook">Hook</span>
+            <span class="section-text">${escHtml(video.hook)}</span>
+          </div>
+        </div>`;
+
+        html += `<div class="full-script-block">
+          <div class="full-script-top">
+            <span class="full-script-label">Full script</span>
+            <button class="copy-btn" onclick="copyText(this, ${JSON.stringify(video.fullScript)})">Copy</button>
+          </div>
+          <div class="full-script-text">${escHtml(video.fullScript)}</div>
+        </div>`;
+      } else {
+        html += `<div class="no-meta">No script metadata — raw media file</div>`;
+      }
+
+      if (video.caption) {
+        html += `<div class="caption-block">
+          <div class="caption-top">
+            <span class="caption-label">Caption</span>
+            <button class="copy-btn" onclick="copyText(this, ${JSON.stringify(video.caption)})">Copy</button>
+          </div>
+          <div class="caption-text">${escHtml(video.caption)}</div>
+        </div>`;
+      }
+
+      html += `<button class="btn-launch" id="btn-launch">🚀 Launch UGC Campaign</button>`;
+
+      scriptPane.innerHTML = html;
+      document.getElementById('btn-launch').addEventListener('click', launchCampaign);
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function launchCampaign() {
+      const overlay = document.getElementById('campaign-overlay');
+      const icons   = ['ig','fb','tt','x'].map(p => document.querySelector(`.cmp-icon[data-p="${p}"]`));
+      const platEls = ['ig','fb','tt','x'].map(p => document.getElementById(`cmp-${p}`));
+      const title   = document.getElementById('cmp-title');
+      const sub     = document.getElementById('cmp-subtitle');
+
+      // Reset
+      icons.forEach(el => { el.className = 'cmp-icon'; });
+      platEls.forEach(el => el.classList.remove('live'));
+      title.className = 'cmp-title';
+      title.textContent = 'Preparing launch…';
+      sub.textContent = 'Broadcasting your content';
+
+      overlay.classList.add('open');
+
+      // Burst icons out one by one
+      const burstDelay = [300, 500, 700, 900];
+      icons.forEach((el, i) => {
+        setTimeout(() => el.classList.add('burst'), burstDelay[i]);
+      });
+
+      // Check each platform with stagger after all have burst
+      const checkDelay = [1300, 1600, 1900, 2200];
+      icons.forEach((el, i) => {
+        setTimeout(() => {
+          el.classList.add('checked');
+          platEls[i].classList.add('live');
+        }, checkDelay[i]);
+      });
+
+      // Final success state
+      setTimeout(() => {
+        title.textContent = 'Campaign live ✓';
+        title.classList.add('success');
+        sub.textContent = 'Published across 4 platforms';
+      }, 2600);
+    }
+
+    document.getElementById('campaign-overlay').addEventListener('click', () => {
+      document.getElementById('campaign-overlay').classList.remove('open');
+    });
+
+    function closeModal() {
+      modal.classList.remove('open');
+      modalVideo.pause();
+      modalVideo.src = '';
+      document.body.style.overflow = '';
+    }
+
+    modalClose.addEventListener('click', closeModal);
+    modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    btnMute.addEventListener('click', () => {
+      modalVideo.muted = !modalVideo.muted;
+      btnMute.textContent = modalVideo.muted ? '🔇' : '🔊';
+    });
+
+    // Filters
+    document.getElementById('filter-bar').addEventListener('click', e => {
+      const btn = e.target.closest('.filter-btn');
+      if (!btn) return;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentFilter = btn.dataset.filter;
+      const filtered = currentFilter === 'all' ? allVideos : allVideos.filter(v => v.source === currentFilter);
+      renderGrid(filtered);
+    });
+
+    function escHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    async function copyText(btn, text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        btn.textContent = '✓ Copied';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+      } catch { btn.textContent = 'Failed'; }
+    }
+
+    // ══════════════════════════════════════════
+    //  ANALYTICS PAGE
+    // ══════════════════════════════════════════
+
+    // Nav toggle
+    document.getElementById('nav-analytics').addEventListener('click', e => {
+      e.preventDefault();
+      document.getElementById('library-page').classList.add('page-hidden');
+      document.getElementById('analytics-page').classList.add('page-visible');
+      document.getElementById('nav-library').classList.remove('active');
+      document.getElementById('nav-analytics').classList.add('active');
+      initAnalytics();
+    });
+
+    document.getElementById('nav-library').addEventListener('click', e => {
+      if (e.target.getAttribute('href') === '/library') {
+        e.preventDefault();
+        document.getElementById('analytics-page').classList.remove('page-visible');
+        document.getElementById('library-page').classList.remove('page-hidden');
+        document.getElementById('nav-analytics').classList.remove('active');
+        document.getElementById('nav-library').classList.add('active');
+      }
+    });
+
+    let analyticsInited = false;
+
+    function initAnalytics() {
+      if (analyticsInited) return;
+      analyticsInited = true;
+
+      buildBarChart();
+      buildHbars();
+      buildCampaigns();
+      buildScoreRings();
+      buildHooksTable();
+      buildHeatmap();
+    }
+
+    // ── Weekly bar chart ──────────────────────
+    function buildBarChart() {
+      const weeks = [
+        { label: 'W1', val: 182000, peak: false },
+        { label: 'W2', val: 241000, peak: false },
+        { label: 'W3', val: 319000, peak: false },
+        { label: 'W4', val: 287000, peak: false },
+        { label: 'W5', val: 398000, peak: false },
+        { label: 'W6', val: 521000, peak: false },
+        { label: 'W7', val: 612000, peak: true  },
+        { label: 'W8', val: 587000, peak: false },
+      ];
+      const max = Math.max(...weeks.map(w => w.val));
+      const chart = document.getElementById('bar-chart');
+      chart.innerHTML = weeks.map(w => {
+        const pct = Math.round((w.val / max) * 100);
+        const label = w.val >= 1000000 ? (w.val/1000000).toFixed(1)+'M' : Math.round(w.val/1000)+'K';
+        return `<div class="bar-col">
+          <div class="bar-fill${w.peak ? ' peak' : ''}" style="height:0%" data-target="${pct}" data-val="${label} views"></div>
+          <div class="bar-label">${w.label}</div>
+        </div>`;
+      }).join('');
+      // Animate heights
+      requestAnimationFrame(() => {
+        chart.querySelectorAll('.bar-fill').forEach(el => {
+          el.style.height = el.dataset.target + '%';
+        });
+      });
+    }
+
+    // ── Content pillar hbars ──────────────────
+    function buildHbars() {
+      const pillars = [
+        { name: 'Pain-point Hook',  pct: 94, color: '#7c6cfc' },
+        { name: 'Social Proof',     pct: 81, color: '#ec4899' },
+        { name: 'Curiosity Loop',   pct: 76, color: '#f59e0b' },
+        { name: 'Authority Build',  pct: 68, color: '#22c55e' },
+        { name: 'Behind the Brand', pct: 55, color: '#06b6d4' },
+        { name: 'Cold Outreach',    pct: 38, color: '#94a3b8' },
+      ];
+      const list = document.getElementById('hbar-list');
+      list.innerHTML = pillars.map(p => `
+        <div class="hbar-row">
+          <div class="hbar-label">${p.name}</div>
+          <div class="hbar-track"><div class="hbar-fill" style="background:${p.color};width:0%" data-target="${p.pct}%"></div></div>
+          <div class="hbar-val">${p.pct}%</div>
+        </div>`).join('');
+      requestAnimationFrame(() => {
+        list.querySelectorAll('.hbar-fill').forEach(el => {
+          el.style.width = el.dataset.target;
+        });
+      });
+    }
+
+    // ── Campaign leaderboard ──────────────────
+    function buildCampaigns() {
+      const campaigns = [
+        { rank: '🥇', cls: 'r1', gold: true,  name: 'Summer Hustle Series',   views: '1.24M', eng: '12.4%', bar: 100 },
+        { rank: '🥈', cls: 'r2', gold: false, name: 'Product Launch Wave',     views: '892K',  eng: '9.1%',  bar: 72 },
+        { rank: '🥉', cls: 'r3', gold: false, name: 'Authority Builder',       views: '445K',  eng: '7.8%',  bar: 36 },
+        { rank: '4',  cls: '',   gold: false, name: 'Behind the Brand',        views: '287K',  eng: '6.2%',  bar: 23 },
+        { rank: '5',  cls: '',   gold: false, name: 'Cold Outreach Hooks',     views: '23K',   eng: '3.1%',  bar: 2 },
+      ];
+      const list = document.getElementById('campaign-list');
+      list.innerHTML = campaigns.map(c => `
+        <div class="campaign-card${c.gold ? ' gold' : ''}">
+          <div class="campaign-rank ${c.cls}">${c.rank}</div>
+          <div class="campaign-info">
+            <div class="campaign-name">${c.name}</div>
+            <div class="campaign-bar-wrap"><div class="campaign-bar" style="width:0%" data-target="${c.bar}%"></div></div>
+          </div>
+          <div class="campaign-metrics">
+            <div class="campaign-views">${c.views}</div>
+            <div class="campaign-eng">${c.eng} eng</div>
+          </div>
+        </div>`).join('');
+      requestAnimationFrame(() => {
+        list.querySelectorAll('.campaign-bar').forEach(el => {
+          el.style.width = el.dataset.target;
+        });
+      });
+    }
+
+    // ── Score rings ───────────────────────────
+    function buildScoreRings() {
+      const scores = [
+        { label: 'Virality Index',    val: 87, color: '#7c6cfc', sub: 'Top 4% of creators globally' },
+        { label: 'Hook Strength',     val: 92, color: '#f59e0b', sub: 'Opening 3s retention rate' },
+        { label: 'AI Confidence',     val: 79, color: '#22c55e', sub: 'Predicted performance score' },
+        { label: 'Trend Alignment',   val: 83, color: '#ec4899', sub: 'Current algorithm fit score' },
+        { label: 'Audience Fit',      val: 91, color: '#06b6d4', sub: '18–34 demo engagement match' },
+      ];
+      const CIRC = 220;
+      const grid = document.getElementById('score-grid');
+      grid.innerHTML = scores.map(s => `
+        <div class="score-card">
+          <div class="score-ring-wrap">
+            <svg class="score-ring-svg" viewBox="0 0 36 36">
+              <circle class="score-ring-bg" cx="18" cy="18" r="15.9"/>
+              <circle class="score-ring-fill" cx="18" cy="18" r="15.9"
+                stroke="${s.color}"
+                stroke-dasharray="${CIRC}"
+                stroke-dashoffset="${CIRC}"
+                data-target="${CIRC - (CIRC * s.val / 100)}"/>
+            </svg>
+            <div class="score-ring-val" style="color:${s.color}">${s.val}</div>
+          </div>
+          <div class="score-card-label">${s.label}</div>
+          <div class="score-card-sub">${s.sub}</div>
+        </div>`).join('');
+      requestAnimationFrame(() => {
+        grid.querySelectorAll('.score-ring-fill').forEach(el => {
+          el.style.strokeDashoffset = el.dataset.target;
+        });
+      });
+    }
+
+    // ── Top hooks table ───────────────────────
+    function buildHooksTable() {
+      const hooks = [
+        { hook: '"You\'re losing $3,000/month doing this wrong…"',          views: '612K', eng: '14.2%', wt: '31s', badge: 'fire', blabel: '🔥 VIRAL' },
+        { hook: '"I gave AI 30 days to run my business. Here\'s what broke"', views: '489K', eng: '11.8%', wt: '28s', badge: 'fire', blabel: '🔥 VIRAL' },
+        { hook: '"Nobody tells you this about cold DMs — but it works"',     views: '321K', eng: '9.4%',  wt: '24s', badge: 'hot',  blabel: '⚡ HOT' },
+        { hook: '"The agency I fired now copies my content"',                views: '287K', eng: '8.7%',  wt: '22s', badge: 'hot',  blabel: '⚡ HOT' },
+        { hook: '"This single reel booked me 14 sales calls in 48 hours"',  views: '244K', eng: '7.9%',  wt: '19s', badge: 'ok',   blabel: '✓ SOLID' },
+        { hook: '"Stop posting aesthetic content. Do this instead"',         views: '198K', eng: '7.1%',  wt: '18s', badge: 'ok',   blabel: '✓ SOLID' },
+        { hook: '"Day 1 vs Day 90 of my content system"',                   views: '143K', eng: '6.3%',  wt: '16s', badge: 'new',  blabel: '★ RISING' },
+      ];
+      const tbody = document.getElementById('hooks-tbody');
+      tbody.innerHTML = hooks.map((h, i) => `
+        <tr>
+          <td style="color:var(--muted);font-weight:700">${i+1}</td>
+          <td class="hook-text">${h.hook}</td>
+          <td class="hook-views">${h.views}</td>
+          <td class="hook-eng">${h.eng}</td>
+          <td style="color:var(--muted)">${h.wt}</td>
+          <td><span class="viral-badge ${h.badge}">${h.blabel}</span></td>
+        </tr>`).join('');
+    }
+
+    // ── Posting time heatmap ──────────────────
+    function buildHeatmap() {
+      const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+      const hours = ['6am','8am','10am','12pm','2pm','4pm','6pm','8pm','10pm'];
+      // engagement intensity 0–1
+      const data = [
+        [.1,.2,.3,.2,.1,.3,.2],
+        [.2,.4,.5,.4,.3,.5,.3],
+        [.3,.5,.6,.5,.4,.4,.3],
+        [.4,.7,.8,.7,.5,.5,.2],
+        [.3,.6,.7,.6,.4,.4,.2],
+        [.5,.9,.8,.7,.6,.5,.3],
+        [.7,1.0,.9,.8,.7,.6,.4],
+        [.8,.9,.8,.7,.6,.5,.3],
+        [.5,.6,.5,.4,.3,.4,.2],
+      ];
+
+      const colors = (v) => {
+        if (v < .2) return '#1a1a24';
+        if (v < .4) return '#2d2458';
+        if (v < .6) return '#4a3fb5';
+        if (v < .8) return '#7c6cfc';
+        return '#fbbf24';
+      };
+
+      const labels = (v, h, d) => {
+        const pct = Math.round(v * 100);
+        return `${d} ${h} — ${pct}% peak`;
+      };
+
+      const grid = document.getElementById('heatmap-grid');
+      let html = '<div class="hmap-header"></div>' + days.map(d => `<div class="hmap-header">${d}</div>`).join('');
+      hours.forEach((h, hi) => {
+        html += `<div class="hmap-row-label">${h}</div>`;
+        days.forEach((d, di) => {
+          const v = data[hi][di];
+          html += `<div class="hmap-cell" style="background:${colors(v)}" data-tip="${labels(v,h,d)}"></div>`;
+        });
+      });
+      grid.innerHTML = html;
+    }
+
+    // Load videos
+    (async () => {
+      try {
+        const API_BASE = window.location.port === '3002' ? '' : 'http://localhost:3002';
+        const res = await fetch(`${API_BASE}/api/videos`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        allVideos = await res.json();
+        renderGrid(allVideos);
+      } catch (err) {
+        grid.innerHTML = `
+          <div class="empty">
+            <div class="empty-icon">⚠️</div>
+            <h2>Could not load videos</h2>
+            <p>Make sure the server is running: <code>npm run serve</code></p>
+          </div>`;
+        document.getElementById('video-count').textContent = '';
+      }
+    })();
+  </script>
+
+</body>
+</html>
