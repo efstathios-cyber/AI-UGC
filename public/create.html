@@ -988,7 +988,7 @@
   </main>
 
   <script>
-    const API_BASE = window.location.port === '3002' ? '' : 'http://localhost:3002';
+    const API_BASE = (window.location.hostname === 'localhost' && window.location.port !== '3002') ? 'http://localhost:3002' : '';
 
     let lastScript = null;
     let lastPersona = null;
@@ -1176,7 +1176,7 @@
             renderError(
               `Could not reach the Forge server.<br><br>
                Start it with: <code>npm run serve</code><br>
-               Then visit <code>http://localhost:3000/create</code>`
+               Then visit <code>http://localhost:3002/create</code>`
             );
           } else {
             renderError(err.message || 'Unknown error');
