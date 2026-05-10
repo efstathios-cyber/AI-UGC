@@ -1,12 +1,14 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
-  "outputDirectory": "public",
+  "builds": [
+    { "src": "public/**", "use": "@vercel/static" },
+    { "src": "src/server/server.ts", "use": "@vercel/node" }
+  ],
   "routes": [
-    { "src": "/api/(.*)", "dest": "/dist/server/server.js" },
-    { "src": "/storage/(.*)", "dest": "/dist/server/server.js" },
-    { "src": "/create", "dest": "/create.html" },
-    { "src": "/library", "dest": "/library.html" },
-    { "handle": "filesystem" }
+    { "src": "/api/(.*)", "dest": "/src/server/server.ts" },
+    { "src": "/storage/(.*)", "dest": "/src/server/server.ts" },
+    { "src": "/create", "dest": "/public/create.html" },
+    { "src": "/library", "dest": "/public/library.html" },
+    { "src": "/", "dest": "/public/index.html" }
   ]
 }
