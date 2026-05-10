@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": "public",
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/dist/server/server.js" },
+    { "src": "/storage/(.*)", "dest": "/dist/server/server.js" },
+    { "handle": "filesystem" }
+  ]
+}

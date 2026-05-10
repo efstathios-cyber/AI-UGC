@@ -38,6 +38,8 @@ loadLocalEnv();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const ROOT = join(__dirname, "../../");
+const PUBLIC = join(ROOT, "public");
+const STORAGE_ROOT = process.env.VERCEL ? "/tmp" : ROOT;
 
 // ── Async video generation jobs ──────────────────────────────────────────────
 
@@ -49,7 +51,7 @@ function makeSeedDanceClient() {
   const apiKey = process.env.SEED_DANCE_API_KEY;
   const baseUrl = process.env.SEED_DANCE_BASE_URL;
   const model = process.env.SEED_DANCE_MODEL ?? "dreamina-seedance-2-0-260128";
-  const mediaDir = join(ROOT, "storage", "media");
+  const mediaDir = join(STORAGE_ROOT, "storage", "media");
   if (apiKey && baseUrl) return new SeedDanceApiClient(apiKey, baseUrl, model, mediaDir);
   return new MockSeedDanceClient(mediaDir);
 }
@@ -265,7 +267,7 @@ async function listVideos(): Promise<VideoEntry[]> {
   const videos: VideoEntry[] = [];
 
   // ── Handoff packages (have captions + scripts) ──
-  const handoffsDir = join(ROOT, "storage", "handoffs");
+  const handoffsDir = join(STORAGE_ROOT, "storage", "handoffs");
   if (existsSync(handoffsDir)) {
     const dirs = await fsp.readdir(handoffsDir).catch(() => [] as string[]);
     for (const dir of dirs) {
@@ -302,7 +304,7 @@ async function listVideos(): Promise<VideoEntry[]> {
   }
 
   // ── Raw media files (no metadata) ──
-  const mediaDir = join(ROOT, "storage", "media");
+  const mediaDir = join(STORAGE_ROOT, "storage", "media");
   if (existsSync(mediaDir)) {
     const files = await fsp.readdir(mediaDir).catch(() => [] as string[]);
     for (const file of files) {
@@ -394,7 +396,7 @@ function json(res: ServerResponse, status: number, data: unknown): void {
 
 // ── Router ───────────────────────────────────────────────────────────────────
 
-const server = createServer(async (req: IncomingMessage, res: ServerResponse) => {
+async function handler(req: IncomingMessage, res: ServerResponse): Promise<void> {
   const url = new URL(req.url ?? "/", `http://${req.headers.host ?? "localhost"}`);
   const { pathname } = url;
 
@@ -410,15 +412,15 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
 
   if (req.method === "GET") {
     if (pathname === "/" || pathname === "/index.html") {
-      serveFile(res, join(ROOT, "index.html"));
+      serveFile(res, join(PUBLIC, "index.html"));
       return;
     }
     if (pathname === "/create" || pathname === "/create.html") {
-      serveFile(res, join(ROOT, "create.html"));
+      serveFile(res, join(PUBLIC, "create.html"));
       return;
     }
     if (pathname === "/library" || pathname === "/library.html") {
-      serveFile(res, join(ROOT, "library.html"));
+      serveFile(res, join(PUBLIC, "library.html"));
       return;
     }
     if (pathname === "/api/videos") {
@@ -432,9 +434,9 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
     }
     if (pathname.startsWith("/storage/")) {
       const relativePath = pathname.slice("/storage/".length);
-      const filePath = join(ROOT, "storage", relativePath);
+      const filePath = join(STORAGE_ROOT, "storage", relativePath);
       // Prevent directory traversal
-      if (!filePath.startsWith(join(ROOT, "storage"))) {
+      if (!filePath.startsWith(join(STORAGE_ROOT, "storage"))) {
         res.writeHead(403);
         res.end("Forbidden");
         return;
@@ -468,7 +470,7 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
           const sdPrompt = buildSeedDancePrompt(persona, script);
           const client = makeSeedDanceClient();
           const media = await client.createSpokenVideo(sdPrompt);
-          const publisher = new ManualHandoffPublisher(join(ROOT, "storage", "handoffs"));
+          const publisher = new ManualHandoffPublisher(join(STORAGE_ROOT, "storage", "handoffs"));
           await publisher.createPackage(script, media);
           jobs.set(jobId, { status: "done" });
         } catch (err) {
@@ -515,11 +517,15 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
 
   res.writeHead(404, { "Content-Type": "text/plain" });
   res.end("Not found");
-});
+}
 
-const PORT = Number(process.env.PORT ?? 3000);
-server.listen(PORT, () => {
-  console.log(`Forge server → http://localhost:${PORT}`);
-  console.log(`Library      → http://localhost:${PORT}/library`);
-  console.log(`Generate     → http://localhost:${PORT}/create`);
-});
+export default handler;
+
+if (!process.env.VERCEL) {
+  const PORT = Number(process.env.PORT ?? 3002);
+  createServer(handler).listen(PORT, () => {
+    console.log(`Forge server → http://localhost:${PORT}`);
+    console.log(`Library      → http://localhost:${PORT}/library`);
+    console.log(`Generate     → http://localhost:${PORT}/create`);
+  });
+}

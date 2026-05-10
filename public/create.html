@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create a Reel — Forge</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #08080a;
+      --bg2: #101014;
+      --bg3: #16161c;
+      --border: #222228;
+      --text: #f5f5f7;
+      --muted: #8e8e9a;
+      --accent: #7c6cfc;
+      --accent-dim: #4a3fb5;
+      --accent-glow: rgba(124,108,252,.18);
+      --green: #22c55e;
+      --red: #ef4444;
+      --radius: 12px;
+      --font: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* ── Nav ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 40px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 1.05rem;
+      letter-spacing: -.02em;
+    }
+
+    .logo-mark {
+      width: 26px; height: 26px;
+      border-radius: 6px;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .8rem;
+      font-weight: 900;
+      color: #fff;
+    }
+
+    .nav-back {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .875rem;
+      color: var(--muted);
+      transition: color .15s;
+    }
+
+    .nav-back:hover { color: var(--text); }
+
+    /* ── Main layout ── */
+    main {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 56px 40px 100px;
+    }
+
+    /* ── Page header ── */
+    .page-header {
+      margin-bottom: 48px;
+    }
+
+    .page-header h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -.04em;
+      margin-bottom: 8px;
+    }
+
+    .page-header p {
+      color: var(--muted);
+      font-size: .95rem;
+    }
+
+    /* ── Form views ── */
+    #view-form { display: block; }
+    #view-loading { display: none; }
+    #view-results { display: none; }
+
+    /* ── Form grid ── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+
+    .form-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+    }
+
+    .panel-label {
+      font-size: .68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: var(--accent);
+      margin-bottom: 28px;
+    }
+
+    .field {
+      margin-bottom: 20px;
+    }
+
+    .field label {
+      display: block;
+      font-size: .8rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 7px;
+      letter-spacing: .01em;
+    }
+
+    .field label span {
+      color: var(--accent);
+      margin-left: 2px;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: .875rem;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color .15s;
+      resize: vertical;
+      appearance: none;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: var(--accent);
+    }
+
+    .field input::placeholder,
+    .field textarea::placeholder {
+      color: #3a3a4c;
+    }
+
+    .field select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238e8e9a' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+      cursor: pointer;
+    }
+
+    .field select option { background: var(--bg3); }
+
+    .field textarea { min-height: 80px; }
+
+    .topic-textarea { min-height: 140px !important; font-size: .95rem !important; line-height: 1.6 !important; }
+
+    .hint {
+      font-size: .75rem;
+      color: var(--muted);
+      margin-top: 20px;
+      line-height: 1.6;
+    }
+
+    .hint strong { color: var(--text); display: block; margin-bottom: 6px; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; }
+
+    .hint ul { list-style: none; }
+
+    .hint ul li::before { content: "→ "; color: var(--accent); font-size: .7rem; }
+
+    /* ── Generate button ── */
+    .generate-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .btn-generate {
+      padding: 16px 48px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-family: var(--font);
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 0 32px var(--accent-glow);
+      transition: opacity .15s, transform .1s;
+      letter-spacing: -.01em;
+    }
+
+    .btn-generate:hover { opacity: .88; transform: translateY(-2px); }
+    .btn-generate:active { transform: translateY(0); }
+    .btn-generate:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+    .no-key-note {
+      font-size: .75rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    /* ── Loading view ── */
+    #view-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 100px 40px;
+      text-align: center;
+    }
+
+    .loading-icon {
+      font-size: 2.5rem;
+      margin-bottom: 28px;
+      animation: spin 2s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .loading-sub {
+      font-size: .875rem;
+      color: var(--muted);
+      margin-bottom: 48px;
+    }
+
+    .pipeline-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .pipe-step {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 18px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: .875rem;
+      color: var(--muted);
+      transition: border-color .3s, color .3s;
+    }
+
+    .pipe-step.active {
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
+    .pipe-step.done {
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    .pipe-step-icon { font-size: 1.1rem; width: 24px; text-align: center; }
+
+    .pipe-step-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+      margin-left: auto;
+      flex-shrink: 0;
+      transition: background .3s;
+    }
+
+    .pipe-step.active .pipe-step-dot { background: var(--accent); animation: pulse-dot 1s infinite; }
+    .pipe-step.done .pipe-step-dot { background: var(--green); animation: none; }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: .4; transform: scale(.7); }
+    }
+
+    /* ── Results ── */
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .results-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .meta-name {
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 100px;
+      font-size: .72rem;
+      font-weight: 600;
+      letter-spacing: .02em;
+    }
+
+    .badge-niche {
+      background: var(--accent-glow);
+      border: 1px solid rgba(124,108,252,.25);
+      color: #a89cff;
+    }
+
+    .badge-pass {
+      background: rgba(34,197,94,.1);
+      border: 1px solid rgba(34,197,94,.25);
+      color: var(--green);
+    }
+
+    .badge-fail {
+      background: rgba(239,68,68,.1);
+      border: 1px solid rgba(239,68,68,.25);
+      color: var(--red);
+    }
+
+    .btn-reset {
+      padding: 8px 18px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--muted);
+      font-family: var(--font);
+      font-size: .8rem;
+      cursor: pointer;
+      transition: border-color .15s, color .15s;
+    }
+
+    .btn-reset:hover { border-color: var(--muted); color: var(--text); }
+
+    /* ── Cards ── */
+    .results-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-title {
+      font-size: .72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--accent);
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tag {
+      font-size: .65rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: var(--bg3);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    /* ── Script sections ── */
+    .script-sections {
+      padding: 0;
+    }
+
+    .script-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .script-row:last-child { border-bottom: none; }
+
+    .script-row-label {
+      font-size: .65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      width: 70px;
+      flex-shrink: 0;
+      padding-top: 2px;
+    }
+
+    .script-row.hook .script-row-label { color: #f59e0b; }
+    .script-row.problem .script-row-label { color: var(--red); }
+    .script-row.agitate .script-row-label { color: #f97316; }
+    .script-row.solution .script-row-label { color: var(--green); }
+    .script-row.cta .script-row-label { color: var(--accent); }
+
+    .script-row-text {
+      font-size: .9rem;
+      line-height: 1.65;
+      color: var(--text);
+    }
+
+    /* ── Full script ── */
+    .full-script-block {
+      border-top: 1px solid var(--border);
+      padding: 20px 24px;
+    }
+
+    .full-script-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .full-script-label {
+      font-size: .68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--muted);
+    }
+
+    .btn-copy {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      font-family: var(--font);
+      font-size: .75rem;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      transition: border-color .15s, color .15s;
+    }
+
+    .btn-copy:hover { border-color: var(--accent); color: var(--text); }
+    .btn-copy.copied { border-color: var(--green); color: var(--green); }
+
+    .full-script-text {
+      font-size: .9rem;
+      line-height: 1.75;
+      color: var(--text);
+      font-style: italic;
+    }
+
+    /* ── Compliance warnings ── */
+    .compliance-block {
+      padding: 16px 24px;
+    }
+
+    .compliance-reason {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 14px;
+      background: rgba(239,68,68,.06);
+      border: 1px solid rgba(239,68,68,.2);
+      border-radius: 8px;
+      font-size: .82rem;
+      color: var(--red);
+      margin-bottom: 8px;
+    }
+
+    /* ── Higgsfield card ── */
+    .higgsfield-body { padding: 24px; }
+
+    .combined-prompt-box {
+      background: #050508;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: .8rem;
+      line-height: 1.75;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .combined-prompt-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .combined-label {
+      font-size: .68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--muted);
+    }
+
+    .fields-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .field-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .field-card-label {
+      font-size: .62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .field-card-text {
+      font-size: .78rem;
+      color: var(--text);
+      line-height: 1.55;
+    }
+
+    .higgsfield-specs {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-top: 4px;
+    }
+
+    .spec-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: .72rem;
+      color: var(--muted);
+      font-family: monospace;
+    }
+
+    .spec-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+
+    /* ── Error state ── */
+    .error-card {
+      background: rgba(239,68,68,.05);
+      border: 1px solid rgba(239,68,68,.2);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      text-align: center;
+    }
+
+    .error-icon { font-size: 2rem; margin-bottom: 14px; }
+    .error-title { font-size: 1rem; font-weight: 700; color: var(--red); margin-bottom: 8px; }
+    .error-msg { font-size: .875rem; color: var(--muted); line-height: 1.6; }
+    .error-msg code { font-family: monospace; background: var(--bg3); padding: 2px 6px; border-radius: 4px; color: var(--text); }
+
+    /* ── Generate Video card ── */
+    .gen-video-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .gen-video-body { padding: 24px; }
+
+    .gen-video-desc {
+      font-size: .84rem;
+      color: var(--muted);
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .btn-gen-video {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #7c6cfc 0%, #5b8def 100%);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-family: var(--font);
+      font-size: .95rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      letter-spacing: -.01em;
+      box-shadow: 0 0 28px rgba(124,108,252,.25);
+      transition: opacity .15s, transform .1s;
+    }
+
+    .btn-gen-video:hover:not(:disabled) { opacity: .88; transform: translateY(-1px); }
+    .btn-gen-video:active:not(:disabled) { transform: translateY(0); }
+    .btn-gen-video:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
+
+    .gen-status {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 16px;
+    }
+
+    .gen-status.visible { display: flex; }
+
+    .gen-spinner {
+      width: 18px; height: 18px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      flex-shrink: 0;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .gen-spinner.done { animation: none; border-color: var(--green); border-top-color: var(--green); }
+    .gen-spinner.failed { animation: none; border-color: var(--red); border-top-color: var(--red); }
+
+    .gen-status-text { font-size: .84rem; color: var(--muted); flex: 1; }
+    .gen-status-text strong { color: var(--text); }
+
+    .btn-view-library {
+      display: none;
+      width: 100%;
+      padding: 12px;
+      margin-top: 12px;
+      background: rgba(34,197,94,.1);
+      border: 1px solid rgba(34,197,94,.3);
+      border-radius: 10px;
+      color: #4ade80;
+      font-family: var(--font);
+      font-size: .88rem;
+      font-weight: 700;
+      text-align: center;
+      cursor: pointer;
+      transition: background .15s;
+      text-decoration: none;
+    }
+
+    .btn-view-library:hover { background: rgba(34,197,94,.18); }
+    .btn-view-library.visible { display: block; }
+
+    /* ── Responsive ── */
+    @media (max-width: 860px) {
+      nav, main { padding-left: 20px; padding-right: 20px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .fields-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 520px) {
+      .fields-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <div class="nav-logo">
+      <div class="logo-mark">F</div>
+      Forge
+    </div>
+    <a href="/" class="nav-back">← Back to home</a>
+  </nav>
+
+  <main>
+
+    <!-- ── FORM VIEW ── -->
+    <div id="view-form">
+      <div class="page-header">
+        <h1>Create your Reel</h1>
+        <p>Define your creator, write your topic, and Forge builds the script and Higgsfield prompt.</p>
+      </div>
+
+      <form id="generate-form">
+        <div class="form-grid">
+
+          <!-- Left: Creator persona -->
+          <div class="form-panel">
+            <div class="panel-label">Your creator</div>
+
+            <div class="field">
+              <label>Creator name <span>*</span></label>
+              <input type="text" id="name" placeholder="Alex" required />
+            </div>
+
+            <div class="field">
+              <label>Niche <span>*</span></label>
+              <select id="niche" required>
+                <option value="" disabled selected>Select a niche</option>
+                <option value="Fitness & Health">Fitness & Health</option>
+                <option value="Beauty & Skincare">Beauty & Skincare</option>
+                <option value="Personal Finance">Personal Finance</option>
+                <option value="Real Estate">Real Estate</option>
+                <option value="Travel">Travel</option>
+                <option value="Food & Cooking">Food & Cooking</option>
+                <option value="Fashion & Style">Fashion & Style</option>
+                <option value="Gaming">Gaming</option>
+                <option value="Wellness & Mental Health">Wellness & Mental Health</option>
+                <option value="Education & Productivity">Education & Productivity</option>
+                <option value="Tech & Gadgets">Tech & Gadgets</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Tone & voice <span>*</span></label>
+              <textarea id="tone" placeholder="e.g. Direct, fast-talking, science-backed, no fluff — talks to viewers like a knowledgeable friend" rows="3" required></textarea>
+            </div>
+
+            <div class="field">
+              <label>Backstory</label>
+              <textarea id="backstory" placeholder="e.g. Certified personal trainer for 8 years, obsessed with evidence-based training, been burned by bad advice" rows="3"></textarea>
+            </div>
+
+            <div class="field">
+              <label>Visual description</label>
+              <textarea id="visual" placeholder="e.g. Athletic build, early 30s, natural hair, casual gym clothes, no makeup" rows="2"></textarea>
+            </div>
+
+            <div class="field">
+              <label>Filming setting <span>*</span></label>
+              <select id="setting" required>
+                <option value="coffee_shop" selected>Coffee shop</option>
+                <option value="home_gym">Home gym</option>
+                <option value="outdoors">Outdoors</option>
+                <option value="car">Car / SUV</option>
+                <option value="kitchen">Kitchen</option>
+                <option value="home_studio">Home studio</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Right: Topic prompt -->
+          <div class="form-panel">
+            <div class="panel-label">Your topic</div>
+
+            <div class="field" style="margin-bottom:0">
+              <label>What's this Reel about? <span>*</span></label>
+              <textarea id="prompt" class="topic-textarea" placeholder="Describe the topic, pain point, or story you want this Reel to cover..." required></textarea>
+            </div>
+
+            <div class="hint">
+              <strong>Topic ideas</strong>
+              <ul>
+                <li>Why most people are doing cardio completely wrong</li>
+                <li>The one skincare step nobody talks about</li>
+                <li>I wasted $3k before I learned this about investing</li>
+                <li>The booking trick that saves me $400 on every flight</li>
+                <li>Why your home gym setup is holding you back</li>
+                <li>3 things my lender never told me before closing</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="generate-row">
+          <button type="submit" class="btn-generate" id="generate-btn">
+            ✦ Generate Reel →
+          </button>
+        </div>
+        <p class="no-key-note" id="no-key-note" style="margin-top:12px;display:none;">
+          No OpenAI key detected — running with mock script generator.
+        </p>
+      </form>
+    </div>
+
+    <!-- ── LOADING VIEW ── -->
+    <div id="view-loading">
+      <div class="loading-icon">⚙</div>
+      <div class="loading-title">Building your Reel</div>
+      <div class="loading-sub" id="loading-sub">Generating script...</div>
+      <div class="pipeline-steps">
+        <div class="pipe-step" id="step-script">
+          <span class="pipe-step-icon">✍️</span>
+          <span>Generating script</span>
+          <span class="pipe-step-dot"></span>
+        </div>
+        <div class="pipe-step" id="step-compliance">
+          <span class="pipe-step-icon">🛡️</span>
+          <span>Checking compliance</span>
+          <span class="pipe-step-dot"></span>
+        </div>
+        <div class="pipe-step" id="step-higgsfield">
+          <span class="pipe-step-icon">🎬</span>
+          <span>Building Higgsfield prompt</span>
+          <span class="pipe-step-dot"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── RESULTS VIEW ── -->
+    <div id="view-results">
+      <div class="results-header">
+        <div class="results-meta">
+          <span class="meta-name" id="result-name"></span>
+          <span class="badge badge-niche" id="result-niche"></span>
+          <span class="badge" id="result-compliance"></span>
+        </div>
+        <button class="btn-reset" id="btn-reset">← Generate another</button>
+      </div>
+
+      <div class="results-grid">
+
+        <!-- Script card -->
+        <div class="card" id="script-card">
+          <div class="card-header">
+            <span class="card-title">Script</span>
+            <div class="card-meta" id="script-tags"></div>
+          </div>
+          <div class="script-sections">
+            <div class="script-row hook">
+              <span class="script-row-label">Hook</span>
+              <span class="script-row-text" id="row-hook"></span>
+            </div>
+            <div class="script-row problem">
+              <span class="script-row-label">Problem</span>
+              <span class="script-row-text" id="row-problem"></span>
+            </div>
+            <div class="script-row agitate">
+              <span class="script-row-label">Agitate</span>
+              <span class="script-row-text" id="row-agitate"></span>
+            </div>
+            <div class="script-row solution">
+              <span class="script-row-label">Solution</span>
+              <span class="script-row-text" id="row-solution"></span>
+            </div>
+            <div class="script-row cta">
+              <span class="script-row-label">CTA</span>
+              <span class="script-row-text" id="row-cta"></span>
+            </div>
+          </div>
+          <div class="full-script-block">
+            <div class="full-script-header">
+              <span class="full-script-label">Full script</span>
+              <button class="btn-copy" id="copy-script">Copy script</button>
+            </div>
+            <div class="full-script-text" id="full-script"></div>
+          </div>
+        </div>
+
+        <!-- Compliance card (only shown if failed) -->
+        <div class="card" id="compliance-card" style="display:none">
+          <div class="card-header">
+            <span class="card-title">Compliance warnings</span>
+          </div>
+          <div class="compliance-block" id="compliance-reasons"></div>
+        </div>
+
+        <!-- Higgsfield prompt card -->
+        <div class="card" id="higgsfield-card">
+          <div class="card-header">
+            <span class="card-title">Higgsfield prompt</span>
+            <div class="card-meta" id="hf-specs"></div>
+          </div>
+          <div class="higgsfield-body">
+            <div class="combined-prompt-header">
+              <span class="combined-label">Combined prompt</span>
+              <button class="btn-copy" id="copy-hf">Copy prompt</button>
+            </div>
+            <div class="combined-prompt-box" id="hf-combined"></div>
+            <div class="fields-grid">
+              <div class="field-card">
+                <div class="field-card-label">Character</div>
+                <div class="field-card-text" id="hf-character"></div>
+              </div>
+              <div class="field-card">
+                <div class="field-card-label">Setting</div>
+                <div class="field-card-text" id="hf-setting"></div>
+              </div>
+              <div class="field-card">
+                <div class="field-card-label">Camera style</div>
+                <div class="field-card-text" id="hf-camera"></div>
+              </div>
+            </div>
+            <div class="higgsfield-specs" id="hf-spec-row"></div>
+          </div>
+        </div>
+
+        <!-- Generate Video card -->
+        <div class="gen-video-card" id="gen-video-card">
+          <div class="card-header">
+            <span class="card-title">Generate video</span>
+          </div>
+          <div class="gen-video-body">
+            <p class="gen-video-desc">Render this script as a video via Seed Dance. Takes ~2–3 minutes. The video will appear in your Library when ready.</p>
+            <div class="gen-status" id="gen-status">
+              <div class="gen-spinner" id="gen-spinner"></div>
+              <span class="gen-status-text" id="gen-status-text">Queued…</span>
+            </div>
+            <button class="btn-gen-video" id="btn-gen-video">⚡ Generate Video</button>
+            <a href="/library" class="btn-view-library" id="btn-view-library">✓ Video ready — View in Library</a>
+          </div>
+        </div>
+
+        <!-- Error card -->
+        <div class="error-card" id="error-card" style="display:none">
+          <div class="error-icon">⚠️</div>
+          <div class="error-title">Something went wrong</div>
+          <div class="error-msg" id="error-msg"></div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    const API_BASE = window.location.port === '3002' ? '' : 'http://localhost:3002';
+
+    let lastScript = null;
+    let lastPersona = null;
+
+    const form = document.getElementById('generate-form');
+    const viewForm = document.getElementById('view-form');
+    const viewLoading = document.getElementById('view-loading');
+    const viewResults = document.getElementById('view-results');
+    const generateBtn = document.getElementById('generate-btn');
+    const btnReset = document.getElementById('btn-reset');
+
+    // Animate loading pipeline steps
+    function animatePipeline(durationMs) {
+      const steps = ['step-script', 'step-compliance', 'step-higgsfield'];
+      const third = durationMs / steps.length;
+      steps.forEach((id, i) => {
+        setTimeout(() => {
+          steps.slice(0, i).forEach(prev => {
+            document.getElementById(prev).className = 'pipe-step done';
+          });
+          document.getElementById(id).className = 'pipe-step active';
+        }, i * third);
+      });
+    }
+
+    function show(view) {
+      viewForm.style.display = 'none';
+      viewLoading.style.display = 'none';
+      viewResults.style.display = 'none';
+      view.style.display = view.id === 'view-loading' ? 'flex' : 'block';
+    }
+
+    function setVal(id, text) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = text;
+    }
+
+    function copyBtn(btnId, getText) {
+      const btn = document.getElementById(btnId);
+      if (!btn) return;
+      btn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(getText());
+          btn.textContent = '✓ Copied!';
+          btn.classList.add('copied');
+          setTimeout(() => {
+            btn.textContent = btn.id === 'copy-script' ? 'Copy script' : 'Copy prompt';
+            btn.classList.remove('copied');
+          }, 2000);
+        } catch {
+          btn.textContent = 'Copy failed';
+        }
+      });
+    }
+
+    function renderResults(data) {
+      const { script, compliance, higgsfield } = data;
+
+      // Store for video generation
+      lastScript = script;
+      lastPersona = {
+        name: document.getElementById('name').value.trim(),
+        niche: document.getElementById('niche').value,
+        tone: document.getElementById('tone').value.trim(),
+        backstory: document.getElementById('backstory').value.trim(),
+        visualDescription: document.getElementById('visual').value.trim(),
+        filmingSetting: document.getElementById('setting').value
+      };
+
+      // Reset gen-video card to initial state
+      document.getElementById('gen-status').classList.remove('visible');
+      document.getElementById('gen-spinner').className = 'gen-spinner';
+      document.getElementById('btn-gen-video').disabled = false;
+      document.getElementById('btn-view-library').classList.remove('visible');
+      document.getElementById('gen-video-card').style.display = 'block';
+
+      // Header
+      setVal('result-name', document.getElementById('name').value);
+      const nicheEl = document.getElementById('result-niche');
+      nicheEl.textContent = document.getElementById('niche').value;
+
+      const compEl = document.getElementById('result-compliance');
+      if (compliance.passed) {
+        compEl.textContent = '✓ Compliance passed';
+        compEl.className = 'badge badge-pass';
+      } else {
+        compEl.textContent = `⚠ ${compliance.reasons.length} warning${compliance.reasons.length > 1 ? 's' : ''}`;
+        compEl.className = 'badge badge-fail';
+      }
+
+      // Script sections
+      setVal('row-hook', script.hook);
+      setVal('row-problem', script.problem);
+      setVal('row-agitate', script.agitate);
+      setVal('row-solution', script.solution);
+      setVal('row-cta', script.cta);
+      setVal('full-script', script.full_script);
+
+      // Script tags
+      const tagsEl = document.getElementById('script-tags');
+      tagsEl.innerHTML = [
+        script.hook_type,
+        script.content_pillar,
+        `${script.estimated_runtime_seconds}s`
+      ].map(t => `<span class="tag">${t.replace(/_/g, ' ')}</span>`).join('');
+
+      // Compliance warnings
+      if (!compliance.passed) {
+        const compCard = document.getElementById('compliance-card');
+        compCard.style.display = 'block';
+        const reasonsEl = document.getElementById('compliance-reasons');
+        reasonsEl.innerHTML = compliance.reasons
+          .map(r => `<div class="compliance-reason"><span>⚠</span><span>${r}</span></div>`)
+          .join('');
+      }
+
+      // Higgsfield
+      setVal('hf-combined', higgsfield.combinedPrompt);
+      setVal('hf-character', higgsfield.characterDescription);
+      setVal('hf-setting', higgsfield.settingDescription);
+      setVal('hf-camera', higgsfield.cameraStyle);
+
+      const specRow = document.getElementById('hf-spec-row');
+      specRow.innerHTML = `
+        <div class="spec-tag"><span class="spec-dot"></span>${higgsfield.aspectRatio}</div>
+        <div class="spec-tag"><span class="spec-dot"></span>${higgsfield.durationSeconds}s</div>
+      `;
+
+      // Copy buttons
+      copyBtn('copy-script', () => script.full_script);
+      copyBtn('copy-hf', () => higgsfield.combinedPrompt);
+    }
+
+    function renderError(msg) {
+      document.getElementById('script-card').style.display = 'none';
+      document.getElementById('higgsfield-card').style.display = 'none';
+      document.getElementById('gen-video-card').style.display = 'none';
+      const errCard = document.getElementById('error-card');
+      errCard.style.display = 'block';
+      document.getElementById('error-msg').innerHTML = msg;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      generateBtn.disabled = true;
+      show(viewLoading);
+      animatePipeline(2800);
+
+      const persona = {
+        name: document.getElementById('name').value.trim(),
+        niche: document.getElementById('niche').value,
+        tone: document.getElementById('tone').value.trim(),
+        backstory: document.getElementById('backstory').value.trim(),
+        visualDescription: document.getElementById('visual').value.trim(),
+        filmingSetting: document.getElementById('setting').value
+      };
+
+      const prompt = document.getElementById('prompt').value.trim();
+
+      try {
+        const res = await fetch(`${API_BASE}/api/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt, persona })
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+          throw new Error(err.error || `HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+
+        // Brief pause so the loading animation completes
+        setTimeout(() => {
+          show(viewResults);
+          renderResults(data);
+          generateBtn.disabled = false;
+        }, 400);
+
+      } catch (err) {
+        setTimeout(() => {
+          show(viewResults);
+          if (err.message?.includes('Failed to fetch') || err.message?.includes('NetworkError')) {
+            renderError(
+              `Could not reach the Forge server.<br><br>
+               Start it with: <code>npm run serve</code><br>
+               Then visit <code>http://localhost:3000/create</code>`
+            );
+          } else {
+            renderError(err.message || 'Unknown error');
+          }
+          generateBtn.disabled = false;
+        }, 400);
+      }
+    });
+
+    btnReset.addEventListener('click', () => {
+      document.getElementById('compliance-card').style.display = 'none';
+      document.getElementById('error-card').style.display = 'none';
+      document.getElementById('script-card').style.display = 'block';
+      document.getElementById('higgsfield-card').style.display = 'block';
+      document.getElementById('gen-video-card').style.display = 'block';
+      // Reset pipeline steps
+      ['step-script','step-compliance','step-higgsfield'].forEach(id => {
+        document.getElementById(id).className = 'pipe-step';
+      });
+      show(viewForm);
+    });
+    // ── Generate Video button ────────────────────────────────────────────────
+    document.getElementById('btn-gen-video').addEventListener('click', async () => {
+      if (!lastScript) return;
+
+      const btn       = document.getElementById('btn-gen-video');
+      const statusEl  = document.getElementById('gen-status');
+      const spinner   = document.getElementById('gen-spinner');
+      const statusTxt = document.getElementById('gen-status-text');
+      const viewLib   = document.getElementById('btn-view-library');
+
+      btn.disabled = true;
+      statusEl.classList.add('visible');
+      statusTxt.textContent = 'Queued…';
+      viewLib.classList.remove('visible');
+
+      let jobId;
+      try {
+        const res = await fetch(`${API_BASE}/api/generate-video`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ script: lastScript, persona: lastPersona })
+        });
+        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || `HTTP ${res.status}`);
+        jobId = (await res.json()).jobId;
+      } catch (err) {
+        spinner.className = 'gen-spinner failed';
+        statusTxt.innerHTML = `<strong>Failed to start job:</strong> ${err.message}`;
+        btn.disabled = false;
+        return;
+      }
+
+      statusTxt.textContent = 'Generating video… redirecting to Library in 3 minutes';
+
+      const timeout = setTimeout(() => {
+        clearInterval(poll);
+        window.location.href = (window.location.port === '3002' ? '' : 'http://localhost:3002') + '/library';
+      }, 3 * 60 * 1000);
+
+      const poll = setInterval(async () => {
+        try {
+          const r = await fetch(`${API_BASE}/api/job/${jobId}`);
+          const job = await r.json();
+
+          if (job.status === 'done') {
+            clearInterval(poll);
+            clearTimeout(timeout);
+            spinner.className = 'gen-spinner done';
+            statusTxt.innerHTML = '<strong>Video ready!</strong> It\'s in your Library.';
+            viewLib.classList.add('visible');
+          } else if (job.status === 'failed') {
+            clearInterval(poll);
+            clearTimeout(timeout);
+            spinner.className = 'gen-spinner failed';
+            statusTxt.innerHTML = `<strong>Generation failed:</strong> ${job.error ?? 'unknown error'}`;
+            btn.disabled = false;
+          }
+        } catch {
+          // network blip — keep polling
+        }
+      }, 5000);
+    });
+  </script>
+
+</body>
+</html>
